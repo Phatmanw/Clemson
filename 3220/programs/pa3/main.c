@@ -19,9 +19,11 @@ void init_mem_alloc(){
 	arena_count[1] = ARENA_1_SIZE/ARENA_1_BLOCK_SIZE;
 	arena_count[2] = ARENA_2_SIZE/ARENA_2_BLOCK_SIZE;
 
-	for( i = 0; i < NUM_BITMAP_WORDS; i++ ){ bitmap[i] = 0; }
+	for (i = 0; i < NUM_BITMAP_WORDS; i++) {
+		bitmap[i] = 0;
+	}
 
-	for( i = 1; i < NUM_ARENAS; i++ ){
+	for (i = 1; i < NUM_ARENAS; i++) {
 		for( j = 0; j < ( arena_count[i] - 1 ); j++ ){
 
 			current = arena_head[i] + ( j * arena_block_size[i] );
