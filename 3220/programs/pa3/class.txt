@@ -1,0 +1,7 @@
+bit map		64		56		8 byte header
+free list	256	248	payload
+free list	4kb	4088	internal frag
+
+milestones
+get arena 1 and 2 working (singly linked list)
+
