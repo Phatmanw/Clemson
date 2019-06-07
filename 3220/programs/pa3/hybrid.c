@@ -1,5 +1,18 @@
 #include "hybrid.h"
 
+char *bitmap_allocate() {
+  char *p = NULL;
+
+  return p;
+}
+
+
+char *list_allocate (int size) {
+  char *p = NULL;
+
+  return p;
+}
+
 char *allocate (int size) {
   if (size <= 0) {
     return NULL;
@@ -19,15 +32,5 @@ char *allocate (int size) {
 }
 
 void release (char *release_ptr) {
-
-}
-
-char *bitmap_allocate(int size) {
-
-
-}
-  size = 50;
-
-list_allocate (int size) {
 
 }
