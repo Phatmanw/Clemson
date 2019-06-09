@@ -1,10 +1,11 @@
 #include "hybrid.h"
 
 char *bitmap_allocate() {
-  char *p = NULL;
-  arena_count[0] -= 1;
-
-  return p;
+  char *p = arena_head[0];
+  arena_head[0] += ARENA_0_BLOCK_SIZE;
+  arena_count[0]--;
+  
+  return p + 8;
 }
 
 
