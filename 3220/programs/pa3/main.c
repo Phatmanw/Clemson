@@ -116,7 +116,7 @@ int main(){
 	release(p[40] + 32);
 	display_arenas();
 
-	p[42] = allocate(1000); printf("ask for 5000, get %p\n", p[42]);
+	p[42] = allocate(5000); printf("ask for 5000, get %p\n", p[42]);
 	p[43] = allocate(1000); printf("ask for 1000, get %p\n", p[43]);
 	p[44] = allocate(1000); printf("ask for 1000, get %p\n", p[44]);
 	p[45] = allocate(1000); printf("ask for 1000, get %p\n", p[45]);

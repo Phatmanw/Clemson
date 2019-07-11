@@ -1,1 +1,13 @@
-let rec printList(ListofLists)
+(* delete lists prior to turning in project 
+
+let simpleH = [[5.;5.;1.];[5.;-5.;2.];[-5.;-5.;3.];[-5.;5.;4.]];;
+
+let t1 = [3.;3.;0.];;
+let t2 = [-1.;-1.;0.];;
+let t3 = [0.;0.;0.];;
+
+printList simpleH;;
+
+*)
+
+let rec printList = function (ListofLists) ->

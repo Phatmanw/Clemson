@@ -1,0 +1,24 @@
+(* demo for SS II class *)
+
+open List;; (* allows access to functions in List module  *)
+
+let rec demo1 = function (avector) ->
+  avector;;
+
+let rec demo2 = function (avector) ->
+  avector@avector;;
+
+let rec demo3 = function (v1,v2) ->
+ (hd v1) + (hd v2) ;;
+
+(* this next function has a big problem -- can you spot it? *)
+
+let rec demo4 = function (v1,v2) ->
+ ((hd v1) + (hd v2))::demo4((tl v1),(tl v2));;
+
+(* maybe this is better *)
+
+let rec demo5 = function (v1,v2) ->
+ if (((tl v1) == []) && ((tl v2) == []))
+    then [] 
+    else ((hd v1) + (hd v2))::demo5((tl v1),(tl v2));;
