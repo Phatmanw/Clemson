@@ -1,13 +1,46 @@
-(* delete lists prior to turning in project 
-
 let simpleH = [[5.;5.;1.];[5.;-5.;2.];[-5.;-5.;3.];[-5.;5.;4.]];;
 
 let t1 = [3.;3.;0.];;
 let t2 = [-1.;-1.;0.];;
 let t3 = [0.;0.;0.];;
 
-printList simpleH;;
+open Printf;;
+open List;;
 
-*)
+let rec printList = function (x) ->
+	if x == [] then
+		failwith "printList should not be used on an empty list";
+		List.iter (printf "%F") (hd x);
+		print_newline(); 
+		if ((tl x) == [])
+			then []
+			else printList(tl x);;
 
-let rec printList = function (ListofLists) ->
+let rec theClass = function (vect) ->
+	if vect == [] then
+		failwith "theClass should not be used on an empty list"
+		else
+		if ((tl vect) == [])
+			then hd vect
+			else theClass(tl vect);;
+	
+let rec distanceR2 = function (v1, v2) ->
+	if (((tl v1) == []) && ((tl v2) == []))
+		then 0.0 
+		else (((hd v1) -. (hd v2)) ** 2.) +. distanceR2((tl v1),(tl v2));; 
+
+let rec distanceAllVectors2 = function (v, vset) ->
+	if (vset == [])
+		then [] 
+		else (distanceR2(v, hd(vset)))::distanceAllVectors2(v,(tl vset));; 
+	
+printList simpleH;; 
+theClass([1.;2.;3.;4.;5.]);;
+theClass([-5.;-5.;4.]);;
+distanceR2([1.;2.;0.],[5.;5.;0.]);;
+distanceR2(t1,t2);;
+distanceR2(t1,t3);;
+distanceAllVectors2([5.;5.;0.],simpleH);; 
+distanceAllVectors2([0.;0.;0.],simpleH);; 
+distanceAllVectors2(t1,simpleH);; 
+distanceAllVectors2([-25.;1.;0.],simpleH);; 

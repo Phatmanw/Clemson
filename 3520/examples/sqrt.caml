@@ -1,0 +1,3 @@
+let rec recursiveFn3 = function (n) ->
+if n==0 then []
+	else sqrt ((float_of_int n)) + recursiveFn3 (n-1) ;;

@@ -1,0 +1,4 @@
+let rec recursiveFn2 = function (n) ->
+if n==0 then []
+	else
+	sqrt (float_of_int n) :: recursiveFn2 (n-1);;
