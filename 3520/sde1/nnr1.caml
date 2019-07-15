@@ -8,21 +8,16 @@ open Printf;;
 open List;;
 
 let rec printList = function (x) ->
-	if x == [] then
-		failwith "printList should not be used on an empty list";
-		List.iter (printf "%F") (hd x);
-		print_newline(); 
-		if ((tl x) == [])
-			then []
-			else printList(tl x);;
+	(iter (printf "%F ") (hd x));
+	print_newline();
+	if ((tl x) == [])
+		then printf ""
+		else printList(tl x);;
 
 let rec theClass = function (vect) ->
-	if vect == [] then
-		failwith "theClass should not be used on an empty list"
-		else
-		if ((tl vect) == [])
-			then hd vect
-			else theClass(tl vect);;
+	if ((tl vect) == [])
+		then hd vect
+		else theClass(tl vect);;
 	
 let rec distanceR2 = function (v1, v2) ->
 	if (((tl v1) == []) && ((tl v2) == []))
