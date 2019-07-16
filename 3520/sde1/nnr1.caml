@@ -27,8 +27,19 @@ let rec distanceR2 = function (v1, v2) ->
 let rec distanceAllVectors2 = function (v, vset) ->
 	if (vset == [])
 		then [] 
-		else (distanceR2(v, hd(vset)))::distanceAllVectors2(v,(tl vset));; 
+		else (distanceR2(v, hd vset))::distanceAllVectors2(v,(tl vset));; 
 	
+let rec nnr1 = function (test, h) ->
+	if (h == []) then
+		failwith "you messed up"
+		else
+		
+	if ((distanceR2(test,hd h) -. 0.0001) <= 
+			(hd(sort compare (distanceAllVectors2(test, h)))))
+		then theClass(hd h)
+		else nnr1(test, tl h);;
+
+
 printList simpleH;; 
 theClass([1.;2.;3.;4.;5.]);;
 theClass([-5.;-5.;4.]);;
@@ -39,3 +50,6 @@ distanceAllVectors2([5.;5.;0.],simpleH);;
 distanceAllVectors2([0.;0.;0.],simpleH);; 
 distanceAllVectors2(t1,simpleH);; 
 distanceAllVectors2([-25.;1.;0.],simpleH);; 
+distanceAllVectors2(t1, simpleH);;
+nnr1([-25.;-1.;0.],simpleH);;
+nnr1([25.;-1.;0.],simpleH);;
