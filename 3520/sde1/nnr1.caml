@@ -2,8 +2,7 @@ open Printf;;
 open List;;
 
 let rec printList = function (x) ->
-	(iter (printf "%F ") (hd x));
-	print_newline();
+	print_newline(iter (printf "%F ") (hd x));
 	if ((tl x) == [])
 		then printf ""
 		else printList(tl x);;
@@ -28,3 +27,4 @@ let rec nnr1 = function (test, h) ->
 			(hd(sort compare (distanceAllVectors2(test, h)))))
 		then theClass(hd h)
 		else nnr1(test, tl h);;
+
