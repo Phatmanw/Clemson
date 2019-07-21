@@ -2,11 +2,18 @@ open Printf;;
 open List;;
 
 let rec printList = function (x) ->
+	if ( x == [])
+		then printf ""
+		else  (printList(tl x)) iter (printf "%F " ) (hd x);;
+
+
+(*
 	(iter (printf "%F ") (hd x));
 	print_newline();
 	if ((tl x) == [])
 		then printf ""
-		else printList(tl x);;
+		else 
+*)
 
 let rec theClass = function (vect) ->
 	if ((tl vect) == [])
