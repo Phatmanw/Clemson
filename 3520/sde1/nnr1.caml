@@ -2,24 +2,16 @@ open Printf;;
 open List;;
 
 let rec printList = function (x) ->
-	if ( x == [])
-		then printf ""
-		else  (printList(tl x)) iter (printf "%F " ) (hd x);;
-
-
-(*
-	(iter (printf "%F ") (hd x));
-	print_newline();
-	if ((tl x) == [])
-		then printf ""
-		else 
-*)
+	print_newline(iter (printf "%F ") (hd x));
+		if ((tl x) == [])
+			then printf ""
+			else printList(tl x);;
 
 let rec theClass = function (vect) ->
 	if ((tl vect) == [])
 		then hd vect
 		else theClass(tl vect);;
-	
+														
 let rec distanceR2 = function (v1, v2) ->
 	if (((tl v1) == []) && ((tl v2) == []))
 		then 0.0 
@@ -29,9 +21,9 @@ let rec distanceAllVectors2 = function (v, vset) ->
 	if (vset == [])
 		then [] 
 		else (distanceR2(v, hd vset))::distanceAllVectors2(v,(tl vset));; 
-	
+																										
 let rec nnr1 = function (test, h) ->
 	if ((distanceR2(test,hd h) -. 0.0001) < 
-			(hd(sort compare (distanceAllVectors2(test, h)))))
+		(hd(sort compare (distanceAllVectors2(test, h)))))
 		then theClass(hd h)
 		else nnr1(test, tl h);;
