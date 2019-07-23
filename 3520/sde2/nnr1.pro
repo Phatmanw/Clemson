@@ -1,5 +1,5 @@
-/* prototype: printList(+H) 
-*/
+/* prototype: printList(+H) */
+
 printList([]).
 printList([HD|TL]) :- write(HD), nl, printList(TL).
 

@@ -1,0 +1,68 @@
+(** script for grading SDE1 SSII 2019  *)
+
+(** prior to invoking this script, check for legal code as per grading sheet *)
+
+(** also prior to invoking this script, 
+    start and log an ocaml session
+    via: 
+           script -c ocaml <studentname>-sde1.log  
+    then
+          #use"sde1_testing.caml" and 
+          #quit;;
+*)
+
+open List;;   (* just to be sure List module functions are available *)
+
+(** get student work, compile and check *)
+print_string ("\n\n++++++++++Loading Student file:nnr1.caml+++++++++++\n\n");;
+#use"nnr1.caml";;
+
+(** get testing data *)
+#use"./sde1_grading_data.caml";;      
+
+(** exercise the functions *)
+(** simple functions *)
+(* give each returned function value a name for grading *)
+print_string ("\n\n++++++++++Testing Functions+++++++++++++++\n\n");;
+
+let ans1 = theClass(t1);;
+
+let ans2 = printList simpleH;;  (* Note: could use parens *)
+
+let ans3 = printList wcdata;;
+
+let ans4 = distanceR2([1.;2.;0.],[5.;5.;0.]);;
+
+let ans5 = distanceR2(t1,t3);;
+
+let ans6 = distanceAllVectors2([5.;5.;0.],simpleH);;
+
+let ans7 = distanceAllVectors2([-25.;1.;0.],simpleH);; 
+
+let ans8 = nnr1([-25.;1.;0.],simpleH);;
+
+let ans9 = nnr1([25.;-1.;0.],simpleH);; 
+
+(** not so simple functions (and data) *)
+
+let ans10 = distanceR2(tvc3,tvc4);;
+
+let ans11 =  distanceAllVectors2(tvc4,wcdata);;
+
+let ans12 =  distanceAllVectors2(tvc6,wcdata);;
+
+let ans13 = nnr1(tvc1,wcdata);;
+
+let ans14 = nnr1(tvc2,wcdata);;
+
+let ans15 = nnr1(tvc3,wcdata);;
+
+let ans16 = nnr1(tvc4,wcdata);;
+
+let ans17 = nnr1(tvc5,wcdata);;
+
+let ans18 = nnr1(tvc6,wcdata);;
+
+let ans19 = nnr1(tvc7,wcdata);;
+
+let ans20 = nnr1([0.0;0.0;0.0;0.0;0.0;0.0;0.0],wcdata);;
