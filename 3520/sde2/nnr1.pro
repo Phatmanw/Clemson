@@ -1,21 +1,27 @@
-/* prototype: printList(+H) */
+/* prototype: printList(+H) 												*/
 
 printList([]).
 printList([HD|TL]) :- write(HD), nl, printList(TL).
 
 
-/* prototype: theClass(+Avect, -C) */
+/* prototype: theClass(+Avect, -C) 										*/
 
 theClass([A],A).
 
 theClass([_|TA],Class) :- theClass(TA, Class).
 
-/* prototype: distanceR2(+V1, +V2, -DistSq) */
+/* prototype: distanceR2(+V1, +V2, -DistSq) 							*/
 
-distanceR2([],[],0).
-distanceR2([X],[Y],((X-Y)*(X-Y))).  
+distanceR2([_],[_],0.0).
 
 distanceR2([HA|TA],[HB|TB],Sum) :- 
-	distanceR2([HA],[HB],I), 
+	I is (HA-HB)*(HA-HB),
 	distanceR2(TA,TB,J),
 	Sum is I+J.
+
+/* prototype: distanceAllVectors2(+V, +Vset, -Dlist) 				*/
+
+distanceAllVectors2([],[],[]). 									   	
+distanceAllVectors2(A,[HB|_],Dlist) :- 
+	distanceR2(A, HB,Dlist).
+
