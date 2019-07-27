@@ -21,7 +21,10 @@ distanceR2([HA|TA],[HB|TB],Sum) :-
 
 /* prototype: distanceAllVectors2(+V, +Vset, -Dlist) 				*/
 
-distanceAllVectors2([],[],[]). 									   	
-distanceAllVectors2(A,[HB|_],Dlist) :- 
-	distanceR2(A, HB,Dlist).
+distanceAllVectors2(_,[],[]). 									   	
+
+distanceAllVectors2(A,[HB|HT],Dlist) :- 
+	distanceR2(A,HB,I),
+	distanceAllVectors2(A,HT,J),
+	append([I],J,Dlist).
 
