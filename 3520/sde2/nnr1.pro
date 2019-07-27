@@ -12,6 +12,7 @@ theClass([_|TA],Class) :- theClass(TA, Class).
 
 /* prototype: distanceR2(+V1, +V2, -DistSq) */
 
+distanceR2([],[],0).
 distanceR2([X],[Y],((X-Y)*(X-Y))).  
 
 distanceR2([HA|TA],[HB|TB],Sum) :- 
