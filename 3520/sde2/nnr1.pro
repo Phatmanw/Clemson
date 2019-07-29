@@ -31,8 +31,9 @@ distanceAllVectors2(A, [HB|HT], Dlist) :-
 
 /* prototype: nnr1(+Test, +H, -Class)									*/
 
-nnr1().
-
-nnr1(Test, H|T, Class) :- 
-	nnr1(Test, T, J),
-	Class is min_member(Class, Dlist).
+nnr1(Test, [H|T], Class) :- 
+	distanceR2(Test, H, I),
+	append([H], T, B),
+	distanceAllVectors2(Test, B, J),
+	(min_member(I, J) -> theClass(H, Class));
+	nnr1(Test, T, Class).
