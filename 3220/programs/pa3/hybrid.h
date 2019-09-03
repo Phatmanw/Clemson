@@ -27,5 +27,5 @@ unsigned int bitmap[NUM_BITMAP_WORDS];
 char *arena_head[NUM_ARENAS];
 char *min_address, *max_address;
 
-char *allocate( int size );
-void release( char *release_ptr );
+char *allocate(int size);
+void release(char *release_ptr);
