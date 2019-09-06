@@ -14,39 +14,41 @@ class LatencyTest:
         #       Variables that are not initialized as part of self are local to this function only 
 
         # TODO: Establish a TCP connection with server 
-        self.tcpClient = socket(AF_INET, SOCK_STREAM)
-        
+        self.tcpClient = socket(AF_INET, SOCK_STREAM) 
         # TODO: Connect to the server at the specified port and hostname using our new socket
-        self.tcpClient.connect(server_host, server_port)
+        self.tcpClient.connect((server_host, server_port))
         
     def measure_real_latency(self, num_tests = 25, test_message='abcdefghijklmnopqrstuvwxyz'):
         # TODO: Send the command to the server that we're ready to begin measuring real latencies
         #       The command is '!!!begin_real_latency_measurement', and the server is expecting 
         #       the message to be encoded using the ascii encoding
-        
+        command = '!!!begin_real_latency_measurement'
+        self.tcpClient.send(command.encode())
         # TODO: Listen for a response from the server confirming that it has successfully received the command
         #       The expected response is the string 'OK', in the ascii encoding
-        
+        listen = self.tcpClient.recv(2048)
+        response = listen.decode()
+
         if (response == "OK"):
             # Initialize a list to store the test results
             test_rtts = []
 
             # Perform all of the tests
             for i in range(num_tests):
-                # TODO: Encode the test message using the ascii encoding.                
-                
+                # TODO: Encode the test message using the ascii encoding.
+                encodedMsg = test_message.encode()                    
                 # TODO: Record the current time, for use in latency calculations
-                
+                timeBefore = time.time()   
                 # TODO: Send the test message to the server using the socket created in __init__
-                
+                self.tcpClient.send(encodedMsg)
                 # TODO: Listen for a response from the server. The server will echo back whatever it is sent.
-                
+                listen = self.tcpClient.recv(2048)
                 # TODO: Record the current time, for use in latency calculations
-                
+                timeAfter = time.time()
                 # TODO: Compute the RTT for this test.
-
+                elapsedTime = timeAfter - timeBefore
                 # TODO: Append the computed RTT to the test_rtts list that was initialized before beginning the tests for loop
-                
+                test_rtts.append(elapsedTime)
                 # Pass is included here because no code has been written yet for this loop, and Python requires that some code exist
                 # in all defined functions, loops, etc. You can remove pass once you have written your code, or ignore it and leave it here.
                 pass
@@ -54,15 +56,18 @@ class LatencyTest:
             # Compute and return the average RTT. We do this by summing all of the values in the test_rtts list, 
             # and then dividing this value by the length of the test_rtts list
             total_RTT = sum(test_rtts)
-            return total_RTT/len(test_rtts))
+            return (total_RTT/len(test_rtts))
     
     def compute_simulated_latency(self, num_tests = 25):
         # TODO: Send the command to the server that we're ready to begin simulating latencies
         #       The command is '!!!begin_simulated_latency_measurement', and the server is expecting 
         #       the message to be encoded using the ascii encoding
-        
+        command = '!!!begin_simulated_latency_measurement'
+        self.tcpClient.send(command.encode())
         # TODO: Listen for a response from the server confirming that it has successfully received the command
         #       The expected response is the string 'OK', in the ascii encoding
+        listen = self.tcpClient.recv(2048)
+        response = listen.decode()
         
         if (response == "OK"):
             # Initialize a list to store the test results
@@ -74,9 +79,10 @@ class LatencyTest:
                 #       simulated latency values to ALL received messages, so long as it is in the correct state.
                 #       Any message can be used to request the simulated latency values, so long as the server
                 #       is in the correct state.
-
+                request = 'let_me_get_dem_latency_values_yo'
+                self.tcpClient.send(request.encode())
                 # TODO: Listen for a response from the server. The server will send back a byte array containing the simulated latency values
-                
+                listen = self.tcpClient.recv(2048)
                 # TODO: Unpack the response from the server. The response format is as follows
                 # - int: the length of simulated packet, in bits
                 # - int: the simulated bandwidth, in bits per second
@@ -84,20 +90,24 @@ class LatencyTest:
                 # - double: the speed of data in the simulated medium
                 # - double: the total processing delay
                 # - double: the total queuing delay
-                
+                length, bw, dist, speed, pd, qd = unpack('!iidddd', listen)
                 # TODO: Compute the simulated latency, based on the values received from the server
-
+                latency = 
                 # TODO: Send this result to the server as a float value. Do NOT send this as an ascii-encoded string, 
                 #       like we've done for previous messages. You will need to use pack to send it as a float
-                
+                packed_data = pack('!f', latency)
                 # TODO: Listen for a response from the server. The server will respond with a byte array containing a single bool, 
                 # indicating where our response was correct or not.
-
+                listen = self.tcpClient.recv(2048)
                 # TODO: Unpack the response from the server. The response format is as follows
                 # - bool: whether or not your calculated latency agreed with the server's calculated latency
                 # HINT: Remember unpack returns a list of values, even if you're only unpacking a single value.
-
+                answer = unpack('!?', listen)
                 # TODO: Append the server's response to the test_simulations list that was initialized before beginning the tests for loop
+                test_simulations.append(answer)
+                # Pass is included here because no code has been written yet for this loop, and Python requires that some code exist
+                # in all defined functions, loops, etc. You can remove pass once you have written your code, or ignore it and leave it here.
+                pass
 
             # Return the results of the simulated latency tests
             return test_simulations
