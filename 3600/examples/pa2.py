@@ -12,5 +12,5 @@ while True:
     packed_data = pack('!i', int(message))
     clientSocket.send(packed_data)
     modifiedMessage = clientSocket.recv(2048)
-    unpackedData = unpack('!sd', modifiedMessage)
-    print(unpackedData)
+    unpackedMsg = unpack('!sd', modifiedMessage)
+    print(unpackedMsg)
