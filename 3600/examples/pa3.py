@@ -9,35 +9,27 @@ sel = selectors.DefaultSelector()
 serverName = 'cpsc3600.computing.clemson.edu'
 serverPort = 3607
 
-#create 3 sockets and connect to server
-socket1 = socket(AF_INET, SOCK_STREAM)
-socket1.connect((serverName, serverPort))
-socket2 = socket(AF_INET, SOCK_STREAM)
-socket2.connect((serverName, serverPort))
-socket3 = socket(AF_INET, SOCK_STREAM)
-socket3.connect((serverName, serverPort))
+#create sockets and register them with selector
+for i in range(0,3):
+    connectID = i + 1
+    print('starting connection', connectID, 'to', serverName)
+    sock = socket(AF_INET, SOCK_STREAM)
+    sock.setblocking(False)
+    sock.connect_ex((serverName, serverPort))
+    events = selectors.EVENT_READ | selectors.EVENT_WRITE
+    sel.register(sock, events, i+1)
 
 #
-events = selectors.EVENT_WRITE | selectors.EVENT_READ
-
-#register each socket with selector
-sel.register(socket1, events, 1)
-sel.register(socket2, events, 2)
-sel.register(socket3, events, 3)
-
 while True:
     message = input('input something user: ')
-    socket1.send(message.encode())
-    events = sel.select(timeout=5)
+    sock.send(message.encode())
+    events = sel.select(timeout=10)
 
     for key, mask in events:
         sock = key.fileobj
         data = key.data
-
-        #if mask & selectors.EVENT_READ:
-        echo = sock.recv(2048).decode()
-        print(echo + ": " + str(data))
-            
-        #if mask & selectors.EVENT_WRITE:
-        #    print("foo")
-                    
+        if mask & selectors.EVENT_WRITE:
+            response = sock.recv(2048).decode()
+            print(response + ": " + str(data))
+        else:
+            pass
