@@ -15,7 +15,7 @@ while True:
     before = time()
     message = input('How long you want your password to be? (between 3 and 64 characters): ')
     packed_data = pack('!i', int(message))
-    clientSocket.send(packed_data)
+    clientSocket.send(packed_data.encode())
     modifiedMessage = clientSocket.recv(2048)
     format = '!' + message + 'sd'
     unpackedMsg = unpack(format, modifiedMessage)
