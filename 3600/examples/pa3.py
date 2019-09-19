@@ -10,24 +10,32 @@ serverName = 'cpsc3600.computing.clemson.edu'
 serverPort = 3607
 
 #create sockets and register them with selector
-for i in range(0,3):
-	connectID = i + 1
-   print('starting connection', connectID, 'to', serverName)
-   sock = socket(AF_INET, SOCK_STREAM)
-   sock.setblocking(False)
-   sock.connect_ex((serverName, serverPort))
-   events = selectors.EVENT_READ     
-	sel.register(sock, events, i)
+sock1 = socket(AF_INET, SOCK_STREAM)
+sock1.connect_ex((serverName, serverPort))
+sock1.setblocking(False)
+sock2 = socket(AF_INET, SOCK_STREAM)
+sock2.connect_ex((serverName, serverPort))
+sock2.setblocking(False)
+sock3 = socket(AF_INET, SOCK_STREAM)
+sock3.connect_ex((serverName, serverPort))
+sock3.setblocking(False)
 
+	
+	
+events = selectors.EVENT_READ     
+
+sel.register(sock1, events, 0)
+sel.register(sock2, events, 1)
+sel.register(sock3, events, 2)
 
 #
 while True:
-	message = input('input something user: ')
+	message = input('input something user: ')	
+	sock1.send(message.encode())
+	sock2.send(message.encode())
+	sock3.send(message.encode())
 
-	for i in range(0,3):
-		events = sel.select(timeout=10)
-		sock.send(message.encode())
-
+	events = sel.select(timeout=10)
 
 	for key, mask in events:
 		sock = key.fileobj
