@@ -158,7 +158,7 @@ class IRCServer(object):
 
     # This is the main loop responsible for processing input and output on all sockets this server
     # is connected to. You should manage these connections using a selector you have instantiated.
-    # TODO: In side of the while not self.request_terminate loop, get a list of all sockets ready for processing
+    # TODO: Inside of the while not self.request_terminate loop, get a list of all sockets ready for processing
     #       from your selector, and then process these events. If the socket being processed is the server socket,
     #       call self.accept_new_connection. Otherwise, call self.service_socket.
     def listen(self, server_sockets):
