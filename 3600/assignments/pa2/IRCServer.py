@@ -11,9 +11,8 @@ class IRCServer(object):
     def __init__(self, options, run_on_localhost=False):
 
         # TODO: Initialize any required code here
-
-
-
+        #create an instance of a DefaultSelector
+        self.sel = selectors.DefaultSelector()
 
         # DO NOT EDIT ANYTHING BELOW THIS LINE IN __init__
         # -----------------------------------------------------------------------------
@@ -48,7 +47,6 @@ class IRCServer(object):
         # Human readable information about this server
         self.info = options.info
         
-
         # The first server started is the root node, and will not connect to any other servers
         # All other servers need to connect to another server on startup. That server's information
         # is stored in these variables.
@@ -59,7 +57,6 @@ class IRCServer(object):
         self.connect_to_host_addr = options.connect_to_host
         # The port to connect to on the server
         self.connect_to_port = options.connect_to_port
-
 
         # If we're supposed to run this server on localhost, then change the connect_to_host_addr to 127.0.0.1
         self.run_on_localhost=run_on_localhost
@@ -74,10 +71,8 @@ class IRCServer(object):
         self.logger = None
         self.init_logging()
 
-
         # This can be set to True to terminate the object
         self.request_terminate = False
-
 
         # This dictionary contains mappings from commands to command handlers.
         # Upon receiving a command X, the appropriate command handler can be called with: self.message_handlers[X](...args)
@@ -142,9 +137,16 @@ class IRCServer(object):
     #       to let you distinguish the server socket from all other sockets
     def setup_server_socket(self):
         self.print_info("Configuring the server socket...")
+        # create TCP server socket
+        self.server_socket = socket(AF_INET, SOCK_STREAM)
+        # bind socket to port defined in __init__
+        self.server_socket.bind(('', self.port))
+        #listen for incoming connections
+        self.server_socket.listen(1)
+        #register with selector
+        events = selectors.EVENT_READ
+        self.sel.register(self.server_socket, events, 0)
 
-        
-        
 
     # This function is responsible for connecting to a remote IRC server upon starting this server
     # The details of the server to connect to are set in self.connect_to_host_addr and self.connect_to_port

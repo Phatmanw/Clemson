@@ -474,55 +474,55 @@ if __name__ == "__main__":
     # public test cases + your score on the hidden test cases. The highest possible score is 75 points
     tests = {
         # 12 points
-        'ServerConnections_1_TwoServers':3,
-        'ServerConnections_2_FourServers':4,
-        'ServerConnections_3_EightServers':5,
+        #'ServerConnections_1_TwoServers':3,
+        #'ServerConnections_2_FourServers':4,
+        #'ServerConnections_3_EightServers':5,
 
         # 9 points
         'ClientServerConnections_1_OneServer_OneClient':1,
-        'ClientServerConnections_2_OneServer_FourClients':3,
-        'ClientServerConnections_3_ThreeServers_SevenClients':4,
-        'ClientServerConnections_4_ERROR_NickCollision':1,
+        #'ClientServerConnections_2_OneServer_FourClients':3,
+        #'ClientServerConnections_3_ThreeServers_SevenClients':4,
+        #'ClientServerConnections_4_ERROR_NickCollision':1,
 
         # 3 points
-        'QUIT_1_OneServer_FourClient':1,
-        'QUIT_2_ThreeServers_SevenClients':2,
+        #'QUIT_1_OneServer_FourClient':1,
+        #'QUIT_2_ThreeServers_SevenClients':2,
 
         # 6 points
-        'JOIN_1_OneClient_OneChannel':0.5,
-        'JOIN_2_OneClient_OneChannel_WithKey':0.5,
-        'JOIN_3_ERROR_BadKey':0.5,
-        'JOIN_4_ThreeServers_SevenClients_TwoChannels':1,
-        'JOIN_5_ThreeServers_SevenClients_TwoChannels_WithKey':1,
-        'JOIN_QUIT_6_ThreeServers_SevenClients_TwoChannels':2.5,
+        #'JOIN_1_OneClient_OneChannel':0.5,
+        #'JOIN_2_OneClient_OneChannel_WithKey':0.5,
+        #'JOIN_3_ERROR_BadKey':0.5,
+        #'JOIN_4_ThreeServers_SevenClients_TwoChannels':1,
+        #'JOIN_5_ThreeServers_SevenClients_TwoChannels_WithKey':1,
+        #'JOIN_QUIT_6_ThreeServers_SevenClients_TwoChannels':2.5,
 
         # 4 points
-        'PART_1_OneClient_OneChannel':1,
-        'PART_2_ERROR_NoSuchChannel':0.5,
-        'PART_3_ERROR_NotOnChannel':0.5,
-        'PART_4_ThreeServers_SevenClients_TwoChannels':2,
+        #'PART_1_OneClient_OneChannel':1,
+        #'PART_2_ERROR_NoSuchChannel':0.5,
+        #'PART_3_ERROR_NotOnChannel':0.5,
+        #'PART_4_ThreeServers_SevenClients_TwoChannels':2,
 
         # 4 points
-        'TOPIC_1_OneClient_OneChannel':0.5,
-        'TOPIC_2_ERROR_NoSuchChannel':0.5,
-        'TOPIC_3_ERROR_NotOnChannel':0.5,
-        'TOPIC_4_ThreeServers_SevenClients_TwoChannels':0.5,
-        'TOPIC_5_ServerCreatedAfterChannel':2,
+        #'TOPIC_1_OneClient_OneChannel':0.5,
+        #'TOPIC_2_ERROR_NoSuchChannel':0.5,
+        #'TOPIC_3_ERROR_NotOnChannel':0.5,
+        #'TOPIC_4_ThreeServers_SevenClients_TwoChannels':0.5,
+        #'TOPIC_5_ServerCreatedAfterChannel':2,
 
         # 2 points
-        'NAMES_1_OneClient_OneChannel':0.5,
-        'NAMES_2_ERROR_NoSuchChannel':0.5,
-        'NAMES_3_ThreeServers_SevenClients_TwoChannels':1,
+        #'NAMES_1_OneClient_OneChannel':0.5,
+        #'NAMES_2_ERROR_NoSuchChannel':0.5,
+        #'NAMES_3_ThreeServers_SevenClients_TwoChannels':1,
 
         # 10 points
-        'PRIVMSG_1_OneMessage_ToUser':0.5,
-        'PRIVMSG_2_ERROR_NoSuchNick':0.5,
-        'PRIVMSG_3_OneMessage_ToChannel':1,
-        'PRIVMSG_4_ERROR_NoSuchChannel':0.5,
-        'PRIVMSG_5_ERROR_NotOnChannel':0.5,
-        'PRIVMSG_6_MultipleMessages_ToUsers':2,
-        'PRIVMSG_7_MultipleMessages_ToChannels':2,
-        'PRIVMSG_8_MultipleMessages_ToUsersAndChannels':3,
+        #'PRIVMSG_1_OneMessage_ToUser':0.5,
+        #'PRIVMSG_2_ERROR_NoSuchNick':0.5,
+        #'PRIVMSG_3_OneMessage_ToChannel':1,
+        #'PRIVMSG_4_ERROR_NoSuchChannel':0.5,
+        #'PRIVMSG_5_ERROR_NotOnChannel':0.5,
+        #'PRIVMSG_6_MultipleMessages_ToUsers':2,
+        #'PRIVMSG_7_MultipleMessages_ToChannels':2,
+        #'PRIVMSG_8_MultipleMessages_ToUsersAndChannels':3,
     }
 
     test_manager = IRCTestManager()

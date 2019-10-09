@@ -11,9 +11,8 @@ class IRCClient(object):
     
     def __init__(self, options, run_on_localhost=False):
         # TODO: Initialize any required code here
-
-
-
+        # create a TCP Client socket
+        self.clientSocket = socket(AF_INET, SOCK_STREAM)
 
         # DO NOT EDIT ANYTHING BELOW THIS LINE IN __init__
         # -----------------------------------------------------------------------------
@@ -77,7 +76,6 @@ class IRCClient(object):
         self.connect_to_server()
         
 
-
     ######################################################################
     # This function is called to establish a connection with an IRC server and to send the USER
     # registration message. Once receiving the RPL_WELCOME response, the client should begin listening
@@ -86,9 +84,11 @@ class IRCClient(object):
     # TODO: Connect to the server, send a USER registration message to the server, listen for a RPL_WELCOME response
     #       and begin listening for more messages from the server
     def connect_to_server(self):
-        pass
-        
-
+        self.clientSocket.connect((self.serverhost, self.serverport))
+        self.clientSocket.setblocking(False)
+        msg = "USER" + " " +  self.nick  + " " + self.hostname + " " + self.servername + " " + self.realname
+        self.clientSocket.send(msg.encode())
+        modifiedMessage = self.clientSocket.recv(2048)
 
     # You should call this function when you are ready to start listening for messages from the server
     # You do not need to edit this function
