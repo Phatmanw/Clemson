@@ -20,8 +20,6 @@ sock3 = socket(AF_INET, SOCK_STREAM)
 sock3.connect_ex((serverName, serverPort))
 sock3.setblocking(False)
 
-	
-	
 events = selectors.EVENT_READ     
 
 sel.register(sock1, events, 0)
