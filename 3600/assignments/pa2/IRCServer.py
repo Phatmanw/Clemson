@@ -11,7 +11,8 @@ class IRCServer(object):
     def __init__(self, options, run_on_localhost=False):
 
         # TODO: Initialize any required code here
-        #create an instance of a DefaultSelector
+
+        # create an instance of a DefaultSelector
         self.sel = selectors.DefaultSelector()
 
         # DO NOT EDIT ANYTHING BELOW THIS LINE IN __init__
@@ -137,15 +138,17 @@ class IRCServer(object):
     #       to let you distinguish the server socket from all other sockets
     def setup_server_socket(self):
         self.print_info("Configuring the server socket...")
-        # create TCP server socket
+
+        # create a TCP server socket
         self.server_socket = socket(AF_INET, SOCK_STREAM)
         # bind socket to port defined in __init__
         self.server_socket.bind(('', self.port))
         #listen for incoming connections
         self.server_socket.listen(1)
+        data = "server"
         #register with selector
         events = selectors.EVENT_READ
-        self.sel.register(self.server_socket, events, 0)
+        self.sel.register(self.server_socket, events, data)
 
 
     # This function is responsible for connecting to a remote IRC server upon starting this server

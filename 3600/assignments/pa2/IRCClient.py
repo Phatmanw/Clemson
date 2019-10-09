@@ -11,8 +11,9 @@ class IRCClient(object):
     
     def __init__(self, options, run_on_localhost=False):
         # TODO: Initialize any required code here
-        # create a TCP Client socket
-        self.clientSocket = socket(AF_INET, SOCK_STREAM)
+
+        # create a TCP Client socket variable
+        self.clientSocket = None
 
         # DO NOT EDIT ANYTHING BELOW THIS LINE IN __init__
         # -----------------------------------------------------------------------------
@@ -84,19 +85,29 @@ class IRCClient(object):
     # TODO: Connect to the server, send a USER registration message to the server, listen for a RPL_WELCOME response
     #       and begin listening for more messages from the server
     def connect_to_server(self):
-        self.clientSocket.connect((self.serverhost, self.serverport))
+
+        # setup TCP socket and connect to server
+        self.clientSocket = socket(AF_INET, SOCK_STREAM) 
+        self.clientSocket.connect((self.serverhost, int(self.serverport)))
         self.clientSocket.setblocking(False)
+
+        # USER registration message
         msg = "USER" + " " +  self.nick  + " " + self.hostname + " " + self.servername + " " + self.realname
+
+        # send msg to server
         self.clientSocket.send(msg.encode())
-        modifiedMessage = self.clientSocket.recv(2048)
+
+        # get response from server
+        response = self.clientSocket.recv(2048).decode()
+
+        if (response == "RPL_WELCOME"):
+            pass
 
     # You should call this function when you are ready to start listening for messages from the server
     # You do not need to edit this function
     def start_listening_to_server(self):
         x = threading.Thread(target=self.listen_for_server_input)
         x.start()
-
-
 
     # This function listens for messages from the server.
     # TODO: Read respones from the server and put them into the server_read_buffer.
