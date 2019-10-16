@@ -22,7 +22,6 @@ class IRCClient(object):
         # NOTE: As of right now, this should always be true.
         self.simulate = options.simulate
 
-
         # The name, address,and port the server you are connecting to is running on
         self.serverhost = options.serverhost
         self.serveraddr = options.serverhost
@@ -88,11 +87,10 @@ class IRCClient(object):
 
         # setup TCP socket and connect to server
         self.clientSocket = socket(AF_INET, SOCK_STREAM) 
-        self.clientSocket.connect((self.serverhost, int(self.serverport)))
-        self.clientSocket.setblocking(False)
+        self.clientSocket.connect((self.serveraddr, int(self.serverport)))
 
         # USER registration message
-        msg = "USER" + " " +  self.nick  + " " + self.hostname + " " + self.servername + " " + self.realname
+        msg = "USER " +  self.nick  + " " + self.hostname + " " + self.servername + " :" + self.realname
 
         # send msg to server
         self.clientSocket.send(msg.encode())

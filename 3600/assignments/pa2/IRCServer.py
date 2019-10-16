@@ -145,8 +145,10 @@ class IRCServer(object):
         self.server_socket.bind(('', self.port))
         #listen for incoming connections
         self.server_socket.listen(1)
-        data = "server"
+        # nonblocking
+        self.server_socket.setblocking(False)
         #register with selector
+        data = "serverSocket"
         events = selectors.EVENT_READ
         self.sel.register(self.server_socket, events, data)
 
@@ -178,6 +180,7 @@ class IRCServer(object):
             #       If you get an unexpected error here, try adding a check that there are fileobjs registered with your
             #       selector before calling select() 
             pass
+        self.cleanup()
 
 
 
@@ -187,7 +190,7 @@ class IRCServer(object):
     # TODO: Perform any cleanup required upon termination of the program. Think about what needs to be cleaned up for
     # sockets AND for selectors. 
     def cleanup(self):
-        pass
+        self.server_socket.close()
 
 
 
@@ -374,6 +377,7 @@ class IRCServer(object):
     # to determine that the connection received over that socket is from a server, and to determine which server, for all future
     # messages received from that socket
     def handle_server_message(self, select_key, prefix, command, params):
+        #FIXME
         pass
 
 

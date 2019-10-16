@@ -474,7 +474,7 @@ if __name__ == "__main__":
     # public test cases + your score on the hidden test cases. The highest possible score is 75 points
     tests = {
         # 12 points
-        #'ServerConnections_1_TwoServers':3,
+        'ServerConnections_1_TwoServers':3,
         #'ServerConnections_2_FourServers':4,
         #'ServerConnections_3_EightServers':5,
 
