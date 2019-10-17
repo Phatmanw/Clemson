@@ -159,7 +159,8 @@ class IRCServer(object):
     #       and send a SERVER registration message to the server you've connected to
     def connect_to_server(self):
         self.print_info("Connecting to remote server %s:%i..." % (self.connect_to_host, self.connect_to_port))
-
+        #create client socket
+        #connect to (self.conn_host_addr, conn_port)
         
           
 
@@ -178,7 +179,11 @@ class IRCServer(object):
         while not self.request_terminate:
             # NOTE: You may encounter an error at this point where no fileobjs have yet been registered with your selector
             #       If you get an unexpected error here, try adding a check that there are fileobjs registered with your
-            #       selector before calling select() 
+            #       selector before calling select()
+            
+            # accept_new_connection() ->> call accept() here
+            # or
+            # service_socket() ->> call recv and send
             pass
         self.cleanup()
 
