@@ -15,6 +15,8 @@ class IRCServer(object):
         # create an instance of a DefaultSelector
         self.sel = selectors.DefaultSelector()
 
+        self.tcpClient = None
+
         # DO NOT EDIT ANYTHING BELOW THIS LINE IN __init__
         # -----------------------------------------------------------------------------
 
@@ -159,10 +161,21 @@ class IRCServer(object):
     #       and send a SERVER registration message to the server you've connected to
     def connect_to_server(self):
         self.print_info("Connecting to remote server %s:%i..." % (self.connect_to_host, self.connect_to_port))
-        #create client socket
-        #connect to (self.conn_host_addr, conn_port)
-        
-          
+
+        #setup client socket
+        self.tcpClient = socket(AF_INET, SOCK_STREAM)
+        self.tcpClient.connect((self.connect_to_host_addr, self.connect_to_port))
+
+        #register with selector
+        data = 'FIXME'
+        events = selectors.EVENT_READ
+        self.sel.register(self.tcpClient, events, data)
+
+        #server reg msg
+        msg = "SERVER " + self.servername
+
+        #send to server
+        self.send_message_to_server(self.connect_to_host, msg)
 
     # This is the main loop responsible for processing input and output on all sockets this server
     # is connected to. You should manage these connections using a selector you have instantiated.
@@ -181,10 +194,19 @@ class IRCServer(object):
             #       If you get an unexpected error here, try adding a check that there are fileobjs registered with your
             #       selector before calling select()
             
-            # accept_new_connection() ->> call accept() here
-            # or
-            # service_socket() ->> call recv and send
-            pass
+            # select() loop
+            for key, mask in events:
+                sock = key.fileobj
+                data = key.data
+
+                if data == "serverSocket":
+                    self.accept_new_connection(sock)
+                else:
+                    self.service_socket(key, mask)
+            # if server socket (check data)
+            # accept_new_connection() ->> call accept() here and register with selector
+            # otherwise call service_socket (see below)
+            # service_socket() ->> call recv (READ) and send (WRITE)
         self.cleanup()
 
 
@@ -196,8 +218,8 @@ class IRCServer(object):
     # sockets AND for selectors. 
     def cleanup(self):
         self.server_socket.close()
-
-
+        # cleanup selector
+        self.sel.unregister(FIXME) 
 
 
 
