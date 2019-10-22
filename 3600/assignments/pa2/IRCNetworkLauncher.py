@@ -1,7 +1,8 @@
 import threading, os, re, time, sys, json
 from optparse import OptionParser
-from IRCServer import IRCServer
+from IRCServer import IRCServer as IRCServer
 from IRCClient import IRCClient
+from IRCBasicConnectivityTest import IRCBasicConnectivityTest
 
 class IRCTestManager(object):
 
@@ -149,11 +150,20 @@ class IRCTestManager(object):
                     sys.stdout = sys.__stdout__
                     print("%s passed: %r" % (test, passed))
                     if exception:
-                        print("\t%s" % exception)
+                        print("%s" % exception)
         
         return score
 
     def run_test(self, test):
+        if "type" in test:
+            if test["type"] == "basic_connectivity":
+                tester = IRCBasicConnectivityTest(IRCServer)
+                return tester.run_test(test)
+        else:
+            return self.run_IRC_test(test)    
+
+
+    def run_IRC_test(self, test):
         try :
             self.threads = {}
             self.servers = {}
@@ -177,7 +187,7 @@ class IRCTestManager(object):
             for x in self.threads.values():
                 x['thread'].join()
 
-            return self.check_test_results(test, self.servers, self.clients)
+            return self.check_IRC_test_results(test, self.servers, self.clients)
 
         except Exception as e:
             for x in self.threads.values():
@@ -186,11 +196,9 @@ class IRCTestManager(object):
                 x['thread'].join()
             return False, e
 
-
-
     ######################################################################
     # Verify if test succeeded
-    def check_test_results(self, test, servers, clients):        
+    def check_IRC_test_results(self, test, servers, clients):        
         problems = ""
 
         for state in test['final_state']:
@@ -363,7 +371,7 @@ class IRCTestManager(object):
         args = re.findall(r'(?:[^\s,"]|"(?:\\.|[^"])*")+', args)
         options, args = self.server_op.parse_args(args)
         server = IRCServer(options, run_on_localhost=True)
-        
+
         x = threading.Thread(target=server.run)
         self.threads[server.servername] = {
             'thread':x,
@@ -382,7 +390,7 @@ class IRCTestManager(object):
         client = IRCClient(options, run_on_localhost=True)
         
         x = threading.Thread(target=client.run)
-        self.threads[client.nick] = {
+        self.threads[client.nick + "@" + client.servername] = {
             'thread':x,
             'app':client
         }
@@ -446,6 +454,7 @@ class IRCTestManager(object):
     ######################################################################
     # One arg: time to wait
     def wait(self, args):
+        print("Waiting... %s" % args)
         time.sleep(float(args))
 
 
@@ -467,66 +476,86 @@ class IRCTestManager(object):
 
 if __name__ == "__main__":
 
+    test_manager = IRCTestManager()
+    basic_score = 0
+    IRC_connection_score = 0
+    IRC_channel_score = 0
+    IRC_messaging_score = 0
+
     # These public test cases are worth 50 points. When grading your project, we will also run 
     # hidden test cases that are worth 25 points. These test cases cover the same functionality, so 
     # if your code is correct and passes the public test cases, it SHOULD also pass the 
     # hidden test cases. Your grade on the project will be equal to your score on the 
     # public test cases + your score on the hidden test cases. The highest possible score is 75 points
-    tests = {
-        # 12 points
-        'ServerConnections_1_TwoServers':3,
-        #'ServerConnections_2_FourServers':4,
-        #'ServerConnections_3_EightServers':5,
-
-        # 9 points
-        'ClientServerConnections_1_OneServer_OneClient':1,
-        #'ClientServerConnections_2_OneServer_FourClients':3,
-        #'ClientServerConnections_3_ThreeServers_SevenClients':4,
-        #'ClientServerConnections_4_ERROR_NickCollision':1,
-
-        # 3 points
-        #'QUIT_1_OneServer_FourClient':1,
-        #'QUIT_2_ThreeServers_SevenClients':2,
-
-        # 6 points
-        #'JOIN_1_OneClient_OneChannel':0.5,
-        #'JOIN_2_OneClient_OneChannel_WithKey':0.5,
-        #'JOIN_3_ERROR_BadKey':0.5,
-        #'JOIN_4_ThreeServers_SevenClients_TwoChannels':1,
-        #'JOIN_5_ThreeServers_SevenClients_TwoChannels_WithKey':1,
-        #'JOIN_QUIT_6_ThreeServers_SevenClients_TwoChannels':2.5,
-
-        # 4 points
-        #'PART_1_OneClient_OneChannel':1,
-        #'PART_2_ERROR_NoSuchChannel':0.5,
-        #'PART_3_ERROR_NotOnChannel':0.5,
-        #'PART_4_ThreeServers_SevenClients_TwoChannels':2,
-
-        # 4 points
-        #'TOPIC_1_OneClient_OneChannel':0.5,
-        #'TOPIC_2_ERROR_NoSuchChannel':0.5,
-        #'TOPIC_3_ERROR_NotOnChannel':0.5,
-        #'TOPIC_4_ThreeServers_SevenClients_TwoChannels':0.5,
-        #'TOPIC_5_ServerCreatedAfterChannel':2,
-
-        # 2 points
-        #'NAMES_1_OneClient_OneChannel':0.5,
-        #'NAMES_2_ERROR_NoSuchChannel':0.5,
-        #'NAMES_3_ThreeServers_SevenClients_TwoChannels':1,
-
-        # 10 points
-        #'PRIVMSG_1_OneMessage_ToUser':0.5,
-        #'PRIVMSG_2_ERROR_NoSuchNick':0.5,
-        #'PRIVMSG_3_OneMessage_ToChannel':1,
-        #'PRIVMSG_4_ERROR_NoSuchChannel':0.5,
-        #'PRIVMSG_5_ERROR_NotOnChannel':0.5,
-        #'PRIVMSG_6_MultipleMessages_ToUsers':2,
-        #'PRIVMSG_7_MultipleMessages_ToChannels':2,
-        #'PRIVMSG_8_MultipleMessages_ToUsersAndChannels':3,
+    basic_connection_tests = {
+        'BasicConnectivity_1_TwoServers':5, 
+        'BasicConnectivity_2_FourServers':5, 
     }
+    basic_score = test_manager.run_tests(basic_connection_tests)
+    
+    IRC_connection_tests = {
+        # # 12 points
+        # 'ServerConnections_1_TwoServers':3,
+        # 'ServerConnections_2_FourServers':4,
+        # 'ServerConnections_3_EightServers':5,
 
-    test_manager = IRCTestManager()
-    score = test_manager.run_tests(tests)
+        # # 9 points
+        # 'ClientServerConnections_1_OneServer_OneClient':1,
+        # 'ClientServerConnections_2_OneServer_FourClients':3,
+        # 'ClientServerConnections_3_ThreeServers_SevenClients':4,
+        # 'ClientServerConnections_4_ERROR_NickCollision':1,
+
+        # # 3 points
+        # 'QUIT_1_OneServer_FourClient':1,
+        # 'QUIT_2_ThreeServers_SevenClients':2,
+    }
+    IRC_connection_score = test_manager.run_tests(IRC_connection_tests)
+
+    IRC_channel_tests = {
+        # # 6 points
+        # 'JOIN_1_OneClient_OneChannel':0.5,
+        # 'JOIN_2_OneClient_OneChannel_WithKey':0.5,
+        # 'JOIN_3_ERROR_BadKey':0.5,
+        # 'JOIN_4_ThreeServers_SevenClients_TwoChannels':1,
+        # 'JOIN_5_ThreeServers_SevenClients_TwoChannels_WithKey':1,
+        # 'JOIN_QUIT_6_ThreeServers_SevenClients_TwoChannels':2.5,
+
+        # # 4 points
+        # 'PART_1_OneClient_OneChannel':1,
+        # 'PART_2_ERROR_NoSuchChannel':0.5,
+        # 'PART_3_ERROR_NotOnChannel':0.5,
+        # 'PART_4_ThreeServers_SevenClients_TwoChannels':2,
+
+        # # 4 points
+        # 'TOPIC_1_OneClient_OneChannel':0.5,
+        # 'TOPIC_2_ERROR_NoSuchChannel':0.5,
+        # 'TOPIC_3_ERROR_NotOnChannel':0.5,
+        # 'TOPIC_4_ThreeServers_SevenClients_TwoChannels':0.5,
+        # 'TOPIC_5_ServerCreatedAfterChannel':2,
+        
+        # # 2 points
+        # 'NAMES_1_OneClient_OneChannel':0.5,
+        # 'NAMES_2_ERROR_NoSuchChannel':0.5,
+        # 'NAMES_3_ThreeServers_SevenClients_TwoChannels':1,
+    }
+    IRC_channel_score = test_manager.run_tests(IRC_channel_tests)
+    
+    IRC_messaging_tests = {
+        # # 10 points
+        # 'PRIVMSG_1_OneMessage_ToUser':0.5,
+        # 'PRIVMSG_2_ERROR_NoSuchNick':0.5,
+        # 'PRIVMSG_3_OneMessage_ToChannel':1,
+        # 'PRIVMSG_4_ERROR_NoSuchChannel':0.5,
+        # 'PRIVMSG_5_ERROR_NotOnChannel':0.5,
+        # 'PRIVMSG_6_MultipleMessages_ToUsers':2,
+        # 'PRIVMSG_7_MultipleMessages_ToChannels':2,
+        # 'PRIVMSG_8_MultipleMessages_ToUsersAndChannels':3,
+    }
+    IRC_messaging_score = test_manager.run_tests(IRC_channel_tests)
+
 
     print("#############################")
-    print("Points scored on public test cases: %s/50" % score)
+    print("Points scored on basic test cases: %s/10" % basic_score)
+    print("Points scored on IRC connection test cases: %s/24" % IRC_connection_score)
+    print("Points scored on IRC channel test cases: %s/16" % IRC_channel_score)
+    print("Points scored on IRC messaging test cases: %s/10" % IRC_messaging_score)
