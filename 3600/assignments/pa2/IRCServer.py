@@ -131,7 +131,6 @@ class IRCServer(object):
         # Start listening for connections on the server socket
         self.listen(self.server_socket)
         
-
     # TODO: Create a TCP server socket and bind to the port defined in __init__.
     #       Begin listening for incoming connections and register the socket with your selector
     # HINT: You will need to differentiate between the server socket (which accepts new connections)
@@ -162,7 +161,7 @@ class IRCServer(object):
     def connect_to_server(self):
         self.print_info("Connecting to remote server %s:%i..." % (self.connect_to_host, self.connect_to_port))
 
-        #setup client socket
+        #create/setup client socket
         self.tcpClient = socket(AF_INET, SOCK_STREAM)
         self.tcpClient.connect((self.connect_to_host_addr, self.connect_to_port))
 
@@ -172,7 +171,7 @@ class IRCServer(object):
         self.sel.register(self.tcpClient, events, data)
 
         #server reg msg
-        msg = "SERVER " + self.servername
+        msg = "SERVER " + self.servername + " :" + self.info
 
         #send to server
         self.send_message_to_server(self.connect_to_host, msg)
@@ -209,9 +208,6 @@ class IRCServer(object):
             # service_socket() ->> call recv (READ) and send (WRITE)
         self.cleanup()
 
-
-
-
     # This function will be called by the server before exiting, and will clean up anything that needs to be
     # cleaned before termination
     # TODO: Perform any cleanup required upon termination of the program. Think about what needs to be cleaned up for
@@ -219,9 +215,7 @@ class IRCServer(object):
     def cleanup(self):
         self.server_socket.close()
         # cleanup selector
-        self.sel.unregister(FIXME) 
-
-
+        self.sel.unregister() 
 
     # This function is responsible for handling new connection requests from other servers and from clients. You
     # can't tell if the incoming connection request comes from a server or a client at this point
@@ -232,9 +226,6 @@ class IRCServer(object):
     #       information about this connection
     def accept_new_connection(self, sock):
         pass
-
-        
-
 
     # This function is responsible for handling IRC messages received from connected
     # servers and clients. 
@@ -278,6 +269,7 @@ class IRCServer(object):
     # Remember that send() must be called when handling a selector event with the WRITE mask set to true
     # TODO: Write the code required when the server has a message to be sent to another server
     def send_message_to_server(self, name_of_server_to_send_to, message):
+
         pass
 
 
