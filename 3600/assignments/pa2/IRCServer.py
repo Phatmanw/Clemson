@@ -166,15 +166,14 @@ class IRCServer(object):
         self.tcpClient.connect((self.connect_to_host_addr, self.connect_to_port))
 
         #register with selector
-        data = 'FIXME'
+        data = ConnectionData()
         events = selectors.EVENT_READ
         self.sel.register(self.tcpClient, events, data)
 
         #server reg msg
-        msg = "SERVER " + self.servername + " :" + self.info
+        msg = "SERVER " + self.servername + " 1 :" + self.info + "\r\n"
 
         #send to server
-        self.send_message_to_server(self.connect_to_host, msg)
 
     # This is the main loop responsible for processing input and output on all sockets this server
     # is connected to. You should manage these connections using a selector you have instantiated.
@@ -202,6 +201,7 @@ class IRCServer(object):
                     self.accept_new_connection(sock)
                 else:
                     self.service_socket(key, mask)
+
             # if server socket (check data)
             # accept_new_connection() ->> call accept() here and register with selector
             # otherwise call service_socket (see below)

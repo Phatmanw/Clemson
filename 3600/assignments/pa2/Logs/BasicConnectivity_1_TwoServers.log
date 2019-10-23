@@ -16,5 +16,4 @@ Running client command: --source theshire.nz --destination rivendale.nz --messag
 Waiting... 0.5
 
 Running client command: --source rivendale.nz --destination theshire.nz --message "Second message"
-'str' object has no attribute 'write_buffer'
 Waiting... 4
