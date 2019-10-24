@@ -215,7 +215,7 @@ class IRCServer(object):
     def cleanup(self):
         self.server_socket.close()
         # cleanup selector
-        self.sel.unregister() 
+        self.sel.unregister(self.server_socket) 
 
     # This function is responsible for handling new connection requests from other servers and from clients. You
     # can't tell if the incoming connection request comes from a server or a client at this point
