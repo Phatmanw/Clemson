@@ -144,7 +144,7 @@ class IRCServer(object):
         self.server_socket = socket(AF_INET, SOCK_STREAM)
         # bind socket to port defined in __init__
         self.server_socket.bind(('', self.port))
-        #listen for incoming connections
+        # listen for incoming connections
         self.server_socket.listen(1)
         # nonblocking
         self.server_socket.setblocking(False)
@@ -167,11 +167,11 @@ class IRCServer(object):
 
         #register with selector
         data = ConnectionData()
-        events = selectors.EVENT_READ
+        events = selectors.EVENT_READ | selectors.EVENT_WRITE
         self.sel.register(tcpClient, events, data)
 
         #server reg msg
-        msg = "SERVER " + self.servername + " 1 :" + self.info + "\r\n"
+        msg = "SERVER " + self.servername + " 1 " + ":" + self.info + "\r\n"
 
         #send to server
         data.write_buffer = msg
@@ -218,7 +218,6 @@ class IRCServer(object):
     def cleanup(self):
         # cleanup selector
         self.sel.unregister(self.server_socket) 
-
         self.server_socket.close()
 
     # This function is responsible for handling new connection requests from other servers and from clients. You
@@ -255,7 +254,6 @@ class IRCServer(object):
     def service_socket(self, key, mask):
 
         sock = key.fileobj
-        data = key.data.write_buffer
 
         # check if a READ event
         if mask & selectors.EVENT_READ:
@@ -270,13 +268,12 @@ class IRCServer(object):
         # If it is a write event, check to make sure you have data in the write buffer that needs to be written, 
         # and then send it by calling send() on the socket
         if mask & selectors.EVENT_WRITE:
-            if data == "":
+            if key.data.write_buffer == "":
                 pass
             else:
-                sock.send(data.encode())
-                data = ""
-    
-    # This function should start the process of handling data received by the server. You will need to
+                sock.send(key.data.write_buffer.encode())
+                key.data.write_buffer = ""
+
     # perform several tasks:
     # 1. Split the data into distinct messages, in case the data in the recv buffer contains several commands
     # 2. Separate each message into three variables: prefix, command, and params
