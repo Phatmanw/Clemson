@@ -192,6 +192,8 @@ class IRCServer(object):
             #       If you get an unexpected error here, try adding a check that there are fileobjs registered with your
             #       selector before calling select()
             
+            # get a list of all sockets ready for processing from selector
+            events = self.sel.select(timeout=1)
             # select() loop
             for key, mask in events:
                 sock = key.fileobj
@@ -225,7 +227,21 @@ class IRCServer(object):
     #       See the comments on that class for more details. You will use ConnectionData to keep track of important
     #       information about this connection
     def accept_new_connection(self, sock):
-        pass
+
+        # accept connection request 
+        conn, addr = sock.accept()
+
+        # set blocking
+        conn.setblocking(False)
+
+        # configure for both READ and WRITE events
+        events = selectors.EVENT_READ | selectors.EVENT_WRITE
+
+        # assign ConnectionData instance to data field
+        data = ConnectionData()
+
+        # register with selector
+        self.sel.register(conn, events, data)
 
     # This function is responsible for handling IRC messages received from connected
     # servers and clients. 
@@ -235,7 +251,23 @@ class IRCServer(object):
     #       the other side. In this case, you should unregister and close the socket.
     #       This is the ONLY function where send() and recv() should be called on a socket.
     def service_socket(self, key, mask):
-        pass
+
+        sock = key.fileobj
+        data = key.data
+
+        # check if a READ event
+        if mask & selectors.EVENT_READ:
+            message = sock.recv(2048).decode()
+            self.process_data(key, message)
+            
+        # check if a WRITE event
+        # If it is a write event, check to make sure you have data in the write buffer that needs to be written, 
+        # and then send it by calling send() on the socket
+        if mask & selectors.EVENT_READ:
+            pass
+
+        
+
 
 
 
