@@ -162,18 +162,19 @@ class IRCServer(object):
         self.print_info("Connecting to remote server %s:%i..." % (self.connect_to_host, self.connect_to_port))
 
         #create/setup client socket
-        self.tcpClient = socket(AF_INET, SOCK_STREAM)
-        self.tcpClient.connect((self.connect_to_host_addr, self.connect_to_port))
+        tcpClient = socket(AF_INET, SOCK_STREAM)
+        tcpClient.connect((self.connect_to_host_addr, self.connect_to_port))
 
         #register with selector
         data = ConnectionData()
         events = selectors.EVENT_READ
-        self.sel.register(self.tcpClient, events, data)
+        self.sel.register(tcpClient, events, data)
 
         #server reg msg
         msg = "SERVER " + self.servername + " 1 :" + self.info + "\r\n"
 
         #send to server
+        data.write_buffer = msg
 
     # This is the main loop responsible for processing input and output on all sockets this server
     # is connected to. You should manage these connections using a selector you have instantiated.
@@ -215,9 +216,10 @@ class IRCServer(object):
     # TODO: Perform any cleanup required upon termination of the program. Think about what needs to be cleaned up for
     # sockets AND for selectors. 
     def cleanup(self):
-        self.server_socket.close()
         # cleanup selector
         self.sel.unregister(self.server_socket) 
+
+        self.server_socket.close()
 
     # This function is responsible for handling new connection requests from other servers and from clients. You
     # can't tell if the incoming connection request comes from a server or a client at this point
@@ -253,24 +255,26 @@ class IRCServer(object):
     def service_socket(self, key, mask):
 
         sock = key.fileobj
-        data = key.data
+        data = key.data.write_buffer
 
         # check if a READ event
         if mask & selectors.EVENT_READ:
             message = sock.recv(2048).decode()
-            self.process_data(key, message)
+            if message == "":
+                self.sel.unregister(sock) 
+                sock.close()
+            else:
+                self.process_data(key, message)
             
         # check if a WRITE event
         # If it is a write event, check to make sure you have data in the write buffer that needs to be written, 
         # and then send it by calling send() on the socket
-        if mask & selectors.EVENT_READ:
-            pass
-
-        
-
-
-
-
+        if mask & selectors.EVENT_WRITE:
+            if data == "":
+                pass
+            else:
+                sock.send(data.encode())
+                data = ""
     
     # This function should start the process of handling data received by the server. You will need to
     # perform several tasks:
