@@ -323,7 +323,8 @@ class IRCServer(object):
     # TODO: Write the code required when the server has a message to be sent to another server
     def send_message_to_server(self, name_of_server_to_send_to, message):
         Server = self.servers_lookuptable[name_of_server_to_send_to]
-        Server.write_buffer = message
+        #Server.write_buffer = message
+        Server.write_buffer = Server.write_buffer + message
 
     # This function should implement the functionality used to send a message to a client. This function
     # will be slightly different from send_message_to_server(), as messages addressed to clients are first
@@ -474,10 +475,10 @@ class IRCServer(object):
                 if serv == ServerDeets.servername:
                     alreadyThere = True
 
-            #new server
+            #new server, broadcast it to adjacent servers
             if prefix != None:
                 msg = ":" + self.servername + " SERVER " + ServerDeets.servername + " " + str((int(ServerDeets.hopcount) + 1)) + " :" + ServerDeets.info + "\r\n"
-                self.broadcast_message_to_servers(msg, ignore_server=prefix)
+                self.broadcast_message_to_servers(msg, ignore_server=self.servername)
 
             if prefix == None and alreadyThere == False:
                 self.adjacent_servers.append(params[0])
@@ -489,10 +490,8 @@ class IRCServer(object):
                         msg = ":" + self.servername + " SERVER " + self.servers_lookuptable[i].servername + " " + self.servers_lookuptable[i].hopcount + " :" + self.servers_lookuptable[i].info + "\r\n"
                         self.send_message_to_server(ServerDeets.servername, msg)
 
-                msg = ":" + self.servername + " SERVER " + ServerDeets.servername + " 2 :" + ServerDeets.info + "\r\n"
+                msg = ":" + self.servername + " SERVER " + ServerDeets.servername + " 1 :" + ServerDeets.info + "\r\n"
                 self.broadcast_message_to_servers(msg, ignore_server=ServerDeets.servername)
-
-
 
     ######################################################################
     # Quit message

@@ -42,8 +42,8 @@ minastirith.nz:Listening for new connections on port 6432
 
 Starting --servername osgiliath.nz --port 8558 --info "Citadel of the Stars" --debug --verbose --log-file osgiliath.log --connect_to_host minastirith.nz --connect_to_port 6432
 osgiliath.nz:Launching server osgiliath.nz...
-Waiting... 0.5
 osgiliath.nz:Configuring the server socket...
+Waiting... 0.5
 osgiliath.nz:Connecting to remote server minastirith.nz:6432...
 osgiliath.nz:Listening for new connections on port 8558
 
