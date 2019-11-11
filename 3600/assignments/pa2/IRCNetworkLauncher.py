@@ -488,15 +488,15 @@ if __name__ == "__main__":
     # hidden test cases. Your grade on the project will be equal to your score on the 
     # public test cases + your score on the hidden test cases. The highest possible score is 75 points
     basic_connection_tests = {
-        'BasicConnectivity_1_TwoServers':5, 
-        'BasicConnectivity_2_FourServers':5, 
+        # 'BasicConnectivity_1_TwoServers':5, 
+        # 'BasicConnectivity_2_FourServers':5, 
     }
     basic_score = test_manager.run_tests(basic_connection_tests)
     
     IRC_connection_tests = {
         # # 12 points
         # 'ServerConnections_1_TwoServers':3,
-        # 'ServerConnections_2_FourServers':4,
+         'ServerConnections_2_FourServers':4,
         # 'ServerConnections_3_EightServers':5,
 
         # # 9 points
@@ -555,7 +555,7 @@ if __name__ == "__main__":
 
 
     print("#############################")
-    print("Points scored on basic test cases: %s/10" % basic_score)
+#    print("Points scored on basic test cases: %s/10" % basic_score)
     print("Points scored on IRC connection test cases: %s/24" % IRC_connection_score)
-    print("Points scored on IRC channel test cases: %s/16" % IRC_channel_score)
-    print("Points scored on IRC messaging test cases: %s/10" % IRC_messaging_score)
+#    print("Points scored on IRC channel test cases: %s/16" % IRC_channel_score)
+#    print("Points scored on IRC messaging test cases: %s/10" % IRC_messaging_score)

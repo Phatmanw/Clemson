@@ -7,8 +7,8 @@ theshire.nz:Listening for new connections on port 5555
 
 Starting --servername rivendale.nz --port 5556 --info "Elronds House" --debug --verbose --log-file rivendale.log --connect_to_host theshire.nz --connect_to_port 5555
 rivendale.nz:Launching server rivendale.nz...
-Waiting... 0.5
 rivendale.nz:Configuring the server socket...
+Waiting... 0.5
 rivendale.nz:Connecting to remote server theshire.nz:5555...
 rivendale.nz:Listening for new connections on port 5556
 

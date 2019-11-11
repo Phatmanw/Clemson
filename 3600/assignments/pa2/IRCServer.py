@@ -38,7 +38,7 @@ class IRCServer(object):
         # Store the servers who are directly connected to this server
         # The list should contain the names of the servers
         self.adjacent_servers = []
-        
+
         # Store all information about servers in this variable
         # The key should be the servername, and the variable a ServerDetails object
         self.servers_lookuptable = {}
@@ -287,8 +287,28 @@ class IRCServer(object):
     # TODO: Write this function, including all of the functionality described above. You are encouraged
     #       to create several methods that are called by process_data to handle each of these required effects
     def process_data(self, select_key, recv_data):
-        pass
+        prefix = None
+        command = None
+        params = None
 
+        # check for multiple messages with split on \r\n
+        msg = recv_data.split("\r\n")
+        listLength = len(msg)
+
+        for item in msg:
+            if item != '':
+                recv_data = item
+                trailing = []
+                if recv_data[0] == ':':
+                    prefix, recv_data = recv_data[1:].split(' ', 1)
+                if recv_data.find(' :') != -1:
+                    recv_data, trailing = recv_data.split(' :', 1)
+                    params = recv_data.split()
+                    params.append(trailing)
+                else:
+                    params = recv_data.split()
+                command = params.pop(0)
+                self.message_handlers[command](select_key, prefix, command, params)
 
     
 
@@ -302,10 +322,8 @@ class IRCServer(object):
     # Remember that send() must be called when handling a selector event with the WRITE mask set to true
     # TODO: Write the code required when the server has a message to be sent to another server
     def send_message_to_server(self, name_of_server_to_send_to, message):
-
-        pass
-
-
+        Server = self.servers_lookuptable[name_of_server_to_send_to]
+        Server.write_buffer = message
 
     # This function should implement the functionality used to send a message to a client. This function
     # will be slightly different from send_message_to_server(), as messages addressed to clients are first
@@ -315,7 +333,6 @@ class IRCServer(object):
     # TODO: Write the code required when the server has a message to be sent to a client
     def send_message_to_client(self, name_of_client_to_send_to, message):
         pass
-
 
 
     # When responding to an error, you may not yet know the name of client/server when sent the message
@@ -339,8 +356,9 @@ class IRCServer(object):
     # TODO: Write the code required to broadcast to all adjacent servers, except for a server included in the
     #       ignore_server parameter
     def broadcast_message_to_servers(self, message, ignore_server=None):
-        pass
-
+        for i in self.adjacent_servers:
+            if i != ignore_server:
+                self.send_message_to_server(i, message)
 
 
     # This is a helper function that should ingest the name of the numeric reply you want to send, and the message
@@ -429,9 +447,50 @@ class IRCServer(object):
     # to determine that the connection received over that socket is from a server, and to determine which server, for all future
     # messages received from that socket
     def handle_server_message(self, select_key, prefix, command, params):
-        #FIXME
-        pass
+        if (len(params) < 3):
+            msg = ":" + str(self.servername) + " " + self.reply_codes("ERR_NEEDMOREPARAMS") + " SERVER :Not enough parameters"
+            print("INSIDE HERE")
+            self.send_message_to_select_key(select_key, msg)
 
+        else:
+            #create ServerDetails object containing server's details
+            ServerDeets = ServerDetails()
+            ServerDeets.servername = params[0]
+            ServerDeets.hopcount = params[1]
+            ServerDeets.info = params[2]
+            ServerDeets.first_link = prefix
+
+            events = selectors.EVENT_READ | selectors.EVENT_WRITE
+            data = ServerDeets
+            self.sel.modify(select_key.fileobj, events, data)
+
+            #add new server to look up table
+            if ServerDeets.servername != self.servername:
+                self.servers_lookuptable[ServerDeets.servername] = ServerDeets
+
+            #check for repeat message
+            alreadyThere = False
+            for serv in self.adjacent_servers:
+                if serv == ServerDeets.servername:
+                    alreadyThere = True
+
+            #new server
+            if prefix != None:
+                msg = ":" + self.servername + " SERVER " + ServerDeets.servername + " " + str((int(ServerDeets.hopcount) + 1)) + " :" + ServerDeets.info + "\r\n"
+                self.broadcast_message_to_servers(msg, ignore_server=prefix)
+
+            if prefix == None and alreadyThere == False:
+                self.adjacent_servers.append(params[0])
+                msg = "SERVER " + self.servername + " 1 :" + self.info + "\r\n"
+                self.send_message_to_server(ServerDeets.servername, msg)
+
+                for i in self.servers_lookuptable:
+                    if i != ServerDeets.servername:
+                        msg = ":" + self.servername + " SERVER " + self.servers_lookuptable[i].servername + " " + self.servers_lookuptable[i].hopcount + " :" + self.servers_lookuptable[i].info + "\r\n"
+                        self.send_message_to_server(ServerDeets.servername, msg)
+
+                msg = ":" + self.servername + " SERVER " + ServerDeets.servername + " 2 :" + ServerDeets.info + "\r\n"
+                self.broadcast_message_to_servers(msg, ignore_server=ServerDeets.servername)
 
 
 
