@@ -293,20 +293,18 @@ class IRCServer(object):
 
         # check for multiple messages with split on \r\n
         msg = recv_data.split("\r\n")
-        listLength = len(msg)
 
         for item in msg:
             if item != '':
-                recv_data = item
                 trailing = []
-                if recv_data[0] == ':':
-                    prefix, recv_data = recv_data[1:].split(' ', 1)
-                if recv_data.find(' :') != -1:
-                    recv_data, trailing = recv_data.split(' :', 1)
-                    params = recv_data.split()
+                if item[0] == ':':
+                    prefix, item = item[1:].split(' ', 1)
+                if item.find(' :') != -1:
+                    item, trailing = item.split(' :', 1)
+                    params = item.split()
                     params.append(trailing)
                 else:
-                    params = recv_data.split()
+                    params = item.split()
                 command = params.pop(0)
                 self.message_handlers[command](select_key, prefix, command, params)
 
@@ -333,7 +331,9 @@ class IRCServer(object):
     # Remember that send() must be called when handling a selector event with the WRITE mask set to true
     # TODO: Write the code required when the server has a message to be sent to a client
     def send_message_to_client(self, name_of_client_to_send_to, message):
-        pass
+        User = self.users_lookuptable[name_of_client_to_send_to]
+        firstLink = self.servers_lookuptable[User.first_link]
+        firstLink.write_buffer = firstLink.write_buffer + message
 
 
     # When responding to an error, you may not yet know the name of client/server when sent the message
@@ -410,10 +410,61 @@ class IRCServer(object):
     # to determine that the connection received over that socket is from a client, and to determine which client, for all future
     # messages received from that socket
     def handle_user_message(self, select_key, prefix, command, params):
-        pass
 
-    
+        #check for valid # of parameters
+        if (len(params) < 3):
+            msg = ":" + str(self.servername) + " " + self.reply_codes["ERR_NEEDMOREPARAMS"] + " SERVER :Not enough parameters"
+            self.send_message_to_select_key(select_key, msg)
 
+        #check if there is a nickname collision
+
+        else:
+            #if all is valid, create USERDETAILS object 
+            UserDeets = UserDetails()
+            UserDeets.nick = params[0]
+            UserDeets.hostname = params[1]
+            UserDeets.servername = params[2]
+            UserDeets.realname = params[3]
+            UserDeets.first_link = prefix
+
+            #check for repeat message in user lookup table
+            alreadyInLookup = False
+            for user in self.users_lookuptable:
+                if user == UserDeets.nick:
+                    alreadyInLookup = True
+
+            #add new user to look up table
+            if alreadyInLookup == False:
+                self.users_lookuptable[UserDeets.nick] = UserDeets
+
+            #check for repeat message in adjacent list
+            alreadyThere = False
+            for user in self.adjacent_users:
+                if user == UserDeets.nick:
+                    alreadyThere = True
+
+            #Forwarded message, there IS a prefix
+            if prefix != None and alreadyThere == False:
+                # Fwd msg to adjacent servers
+                msg = ":" + self.servername + " USER " + UserDeets.nick + " " + UserDeets.hostname + " " + UserDeets.servername + " :" + UserDeets.realname + "\r\n"
+                self.broadcast_message_to_servers(msg, ignore_server=prefix)
+
+            #new user, broadcast it to adjacent users
+            if prefix == None and alreadyInLookup == False:
+                #modify ConnectionData
+                events = selectors.EVENT_READ | selectors.EVENT_WRITE
+                data = UserDeets
+                self.sel.modify(select_key.fileobj, events, data)
+
+                #append nick to user adjacent table
+                self.adjacent_users.append(UserDeets.nick)
+
+                #send RPL Welcome message
+                msg = ":" + self.servername + " " + str(self.reply_codes["RPL_WELCOME"]) + " :Welcome to the IRC " + UserDeets.nick + "!" + UserDeets.realname + "@" + UserDeets.hostname + "\r\n"
+                self.send_message_to_server(UserDeets.servername, msg)
+
+                #broadcast user to adjacent servers (broadcast_message)
+                msg = ":" + self.servername + " USER " + UserDeets.nick + " " + UserDeets.hostname + " " + UserDeets.servername + " :" + UserDetails.realname + "\r\n"
 
     ######################################################################
     # Server message
@@ -449,8 +500,7 @@ class IRCServer(object):
     # messages received from that socket
     def handle_server_message(self, select_key, prefix, command, params):
         if (len(params) < 3):
-            msg = ":" + str(self.servername) + " " + self.reply_codes("ERR_NEEDMOREPARAMS") + " SERVER :Not enough parameters"
-            print("INSIDE HERE")
+            msg = ":" + str(self.servername) + " " + self.reply_codes["ERR_NEEDMOREPARAMS"] + " SERVER :Not enough parameters"
             self.send_message_to_select_key(select_key, msg)
 
         else:
@@ -461,26 +511,33 @@ class IRCServer(object):
             ServerDeets.info = params[2]
             ServerDeets.first_link = prefix
 
-            events = selectors.EVENT_READ | selectors.EVENT_WRITE
-            data = ServerDeets
-            self.sel.modify(select_key.fileobj, events, data)
+            #check for repeat message in server lookup table
+            alreadyInLookup = False
+            for serv in self.servers_lookuptable:
+                if serv == ServerDeets.servername:
+                    alreadyInLookup = True
 
             #add new server to look up table
-            if ServerDeets.servername != self.servername:
+            if ServerDeets.servername != self.servername and alreadyInLookup == False:
                 self.servers_lookuptable[ServerDeets.servername] = ServerDeets
 
-            #check for repeat message
+            #check for repeat message in adjacent list
             alreadyThere = False
             for serv in self.adjacent_servers:
                 if serv == ServerDeets.servername:
                     alreadyThere = True
 
-            #new server, broadcast it to adjacent servers
-            if prefix != None:
+            if prefix != None and alreadyThere == False:
+                # Fwd msg to adjacent servers
                 msg = ":" + self.servername + " SERVER " + ServerDeets.servername + " " + str((int(ServerDeets.hopcount) + 1)) + " :" + ServerDeets.info + "\r\n"
-                self.broadcast_message_to_servers(msg, ignore_server=self.servername)
+                self.broadcast_message_to_servers(msg, ignore_server=prefix)
 
+            #new server, broadcast it to adjacent servers
             if prefix == None and alreadyThere == False:
+                events = selectors.EVENT_READ | selectors.EVENT_WRITE
+                data = ServerDeets
+                self.sel.modify(select_key.fileobj, events, data)
+
                 self.adjacent_servers.append(params[0])
                 msg = "SERVER " + self.servername + " 1 :" + self.info + "\r\n"
                 self.send_message_to_server(ServerDeets.servername, msg)

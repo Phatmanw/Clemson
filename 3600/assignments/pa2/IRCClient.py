@@ -90,7 +90,7 @@ class IRCClient(object):
         self.clientSocket.connect((self.serveraddr, int(self.serverport)))
 
         # USER registration message
-        msg = "USER " +  self.nick  + " " + self.hostname + " " + self.servername + " :" + self.realname
+        msg = "USER " + self.nick + " " + self.hostname + " " + self.servername + " :" + self.realname + "\r\n"
 
         # send msg to server
         self.clientSocket.send(msg.encode())
@@ -98,8 +98,10 @@ class IRCClient(object):
         # get response from server
         response = self.clientSocket.recv(2048).decode()
 
-        if (response == "RPL_WELCOME"):
-            pass
+        while response != "1":
+            response = self.clientSocket.recv(2048).decode()
+
+        self.start_listening_to_server()
 
     # You should call this function when you are ready to start listening for messages from the server
     # You do not need to edit this function
@@ -141,7 +143,7 @@ class IRCClient(object):
     ######################################################################
     # This function should send a message to the server
     def send_message_to_server(self, message):
-        pass
+        self.clientSocket.send(message.encode())
 
 
 
