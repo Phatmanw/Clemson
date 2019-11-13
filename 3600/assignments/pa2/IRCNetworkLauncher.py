@@ -495,19 +495,19 @@ if __name__ == "__main__":
     
     IRC_connection_tests = {
         # # 12 points
-        # 'ServerConnections_1_TwoServers':3,
-        # 'ServerConnections_2_FourServers':4,
-        # 'ServerConnections_3_EightServers':5,
+         'ServerConnections_1_TwoServers':3,
+         'ServerConnections_2_FourServers':4,
+         'ServerConnections_3_EightServers':5,
 
         # # 9 points
          'ClientServerConnections_1_OneServer_OneClient':1,
-        # 'ClientServerConnections_2_OneServer_FourClients':3,
-        # 'ClientServerConnections_3_ThreeServers_SevenClients':4,
-        # 'ClientServerConnections_4_ERROR_NickCollision':1,
+         'ClientServerConnections_2_OneServer_FourClients':3,
+         'ClientServerConnections_3_ThreeServers_SevenClients':4,
+         'ClientServerConnections_4_ERROR_NickCollision':1,
 
         # # 3 points
-        # 'QUIT_1_OneServer_FourClient':1,
-        # 'QUIT_2_ThreeServers_SevenClients':2,
+         'QUIT_1_OneServer_FourClient':1,
+         'QUIT_2_ThreeServers_SevenClients':2,
     }
     IRC_connection_score = test_manager.run_tests(IRC_connection_tests)
 

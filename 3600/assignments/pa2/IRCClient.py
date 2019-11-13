@@ -97,11 +97,15 @@ class IRCClient(object):
 
         # get response from server
         response = self.clientSocket.recv(2048).decode()
+        response = response.split(" ")
 
-        while response != "1":
+        """
+        while response[1] != "1":
             response = self.clientSocket.recv(2048).decode()
-
+            response = response.split(" ")
+        """
         self.start_listening_to_server()
+            
 
     # You should call this function when you are ready to start listening for messages from the server
     # You do not need to edit this function
@@ -114,9 +118,9 @@ class IRCClient(object):
     #       Then begin processing the new message(s)
     def listen_for_server_input(self):
         while not self.request_terminate:
-            pass
-
-
+            msg = self.clientSocket.recv(2048).decode()
+            self.server_read_buffer = self.server_read_buffer + msg
+            self.process_server_input()
 
 
     # This function should start the process of handling messages received by the server. You will need to
@@ -135,7 +139,27 @@ class IRCClient(object):
     #       to create several methods that are called by process_data to handle each of these required effects
     def process_server_input(self):
         if self.server_read_buffer:
-            pass
+            prefix = None
+            command = None
+            params = None
+
+            # check for multiple messages with split on \r\n
+            msg = recv_data.split("\r\n")
+
+            for item in msg:
+                if item != '':
+                    trailing = []
+                    if item[0] == ':':
+                        prefix, item = item[1:].split(' ', 1)
+                    if item.find(' :') != -1:
+                        item, trailing = item.split(' :', 1)
+                        params = item.split()
+                        params.append(trailing)
+                    else:
+                        params = item.split()
+                    command = params.pop(0)
+                    self.message_handlers[command](select_key, prefix, command, params)
+            self.server_read_buffer = ""
 
 
 
@@ -144,7 +168,6 @@ class IRCClient(object):
     # This function should send a message to the server
     def send_message_to_server(self, message):
         self.clientSocket.send(message.encode())
-
 
 
 
@@ -183,7 +206,15 @@ class IRCClient(object):
     # Expected numeric replies: 
     #   None
     def quit(self, quit_message=None):
-        pass
+
+        #Quit WITHOUT an optional message
+        if quit_message == None:
+            msg = "QUIT\r\n"
+            self.clientSocket.send(msg.encode())
+        #Quit WITH an optional message
+        else:
+            msg = "QUIT :" + quit_message + "\r\n"
+            self.clientSocket.send(msg.encode())
 
     
 

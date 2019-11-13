@@ -217,7 +217,7 @@ class IRCServer(object):
     # sockets AND for selectors. 
     def cleanup(self):
         # cleanup selector
-        self.sel.unregister(self.server_socket) 
+        self.sel.close()
         self.server_socket.close()
 
     # This function is responsible for handling new connection requests from other servers and from clients. You
@@ -321,7 +321,6 @@ class IRCServer(object):
     # TODO: Write the code required when the server has a message to be sent to another server
     def send_message_to_server(self, name_of_server_to_send_to, message):
         Server = self.servers_lookuptable[name_of_server_to_send_to]
-        #Server.write_buffer = message
         Server.write_buffer = Server.write_buffer + message
 
     # This function should implement the functionality used to send a message to a client. This function
@@ -343,7 +342,7 @@ class IRCServer(object):
     # if you don't know the name of the server/client the message is directed to
     # TODO: Write the code required when the server has a message to be sent through a select_key
     def send_message_to_select_key(self, select_key, message):
-        pass
+        select_key.data.writebuffer = select_key.data.write_buffer + message
 
 
 
@@ -410,71 +409,78 @@ class IRCServer(object):
     # to determine that the connection received over that socket is from a client, and to determine which client, for all future
     # messages received from that socket
     def handle_user_message(self, select_key, prefix, command, params):
-
         #check for valid # of parameters
-        if (len(params) < 3):
-            msg = ":" + str(self.servername) + " " + self.reply_codes["ERR_NEEDMOREPARAMS"] + " SERVER :Not enough parameters"
+        if (len(params) != 4):
+            msg = ":" + str(self.servername) + " " + str(self.reply_codes["ERR_NEEDMOREPARAMS"]) + " SERVER :Not enough parameters" + "\r\n"
             self.send_message_to_select_key(select_key, msg)
 
-        #check if there is a nickname collision
-
         else:
-            #if all is valid, create USERDETAILS object 
-            UserDeets = UserDetails()
-            UserDeets.nick = params[0]
-            UserDeets.hostname = params[1]
-            UserDeets.servername = params[2]
-            UserDeets.realname = params[3]
-            UserDeets.first_link = prefix
-
-            #check for repeat message in user lookup table
-            alreadyInLookup = False
+            #check if there is a nickname collision
+            collision = False
             for user in self.users_lookuptable:
-                if user == UserDeets.nick:
-                    alreadyInLookup = True
+                if params[0] == user:
+                    msg = ":" + str(self.servername) + " " + str(self.reply_codes["ERR_NICKCOLLISION"]) + " " + params[0] + " :Nickname collision KILL from " + params[3] + "@" + params[1] + "\r\n"
+                    self.send_message_to_select_key(select_key, msg)
+                    collision = True
 
-            #add new user to look up table
-            if alreadyInLookup == False:
-                self.users_lookuptable[UserDeets.nick] = UserDeets
+            if collision == False:
+                #if all is valid, create USERDETAILS object 
+                UserDeets = UserDetails()
+                UserDeets.nick = params[0]
+                UserDeets.hostname = params[1]
+                UserDeets.servername = params[2]
+                UserDeets.realname = params[3]
+                UserDeets.first_link = prefix
 
-            #check for repeat message in adjacent list
-            alreadyThere = False
-            for user in self.adjacent_users:
-                if user == UserDeets.nick:
-                    alreadyThere = True
+                #check for repeat message in user lookup table
+                alreadyInLookup = False
+                for user in self.users_lookuptable:
+                    if user == UserDeets.nick:
+                        alreadyInLookup = True
 
-            #Forwarded message, there IS a prefix
-            if prefix != None and alreadyThere == False:
-                # Fwd msg to adjacent servers
-                msg = ":" + self.servername + " USER " + UserDeets.nick + " " + UserDeets.hostname + " " + UserDeets.servername + " :" + UserDeets.realname + "\r\n"
-                self.broadcast_message_to_servers(msg, ignore_server=prefix)
+                #add new user to look up table
+                if alreadyInLookup == False:
+                    self.users_lookuptable[UserDeets.nick] = UserDeets
 
-            #new user, broadcast it to adjacent users
-            if prefix == None and alreadyInLookup == False:
-                #modify ConnectionData
-                events = selectors.EVENT_READ | selectors.EVENT_WRITE
-                data = UserDeets
-                self.sel.modify(select_key.fileobj, events, data)
+                #check for repeat message in adjacent list
+                alreadyThere = False
+                for user in self.adjacent_users:
+                    if user == UserDeets.nick:
+                        alreadyThere = True
 
-                #append nick to user adjacent table
-                self.adjacent_users.append(UserDeets.nick)
+                #Forwarded message, there IS a prefix
+                if prefix and alreadyThere == False:
+                    # Fwd msg to adjacent servers
+                    msg = ":" + self.servername + " USER " + UserDeets.nick + " " + UserDeets.hostname + " " + UserDeets.servername + " :" + UserDeets.realname + "\r\n"
+                    self.broadcast_message_to_servers(msg, ignore_server=prefix)
 
-                #send RPL Welcome message
-                msg = ":" + self.servername + " " + str(self.reply_codes["RPL_WELCOME"]) + " :Welcome to the IRC " + UserDeets.nick + "!" + UserDeets.realname + "@" + UserDeets.hostname + "\r\n"
-                self.send_message_to_server(UserDeets.servername, msg)
+                #new user, broadcast it to adjacent users
+                if prefix == None and alreadyInLookup == False:
+                    #modify ConnectionData
+                    events = selectors.EVENT_READ | selectors.EVENT_WRITE
+                    data = UserDeets
+                    self.sel.modify(select_key.fileobj, events, data)
 
-                #broadcast user to adjacent servers (broadcast_message)
-                msg = ":" + self.servername + " USER " + UserDeets.nick + " " + UserDeets.hostname + " " + UserDeets.servername + " :" + UserDetails.realname + "\r\n"
+                    #append nick to user adjacent table
+                    self.adjacent_users.append(UserDeets.nick)
 
-    ######################################################################
-    # Server message
-    # Command: SERVER
-    # Parameters: 
-    #   <servername>: the name of the new server
-    #   <hopcount>: the number of hops required to reach this server
-    #   [<info>]: human-readable name for the server
-    # Examples: 
-    #   SERVER rivendale.irc.edu 1 :The House of Elrond                     # This is an initial registration command coming from a new server
+                    #send RPL Welcome message
+                    msg = ":" + self.servername + " " + str(self.reply_codes["RPL_WELCOME"]) + " :Welcome to the IRC " + UserDeets.nick + "!" + UserDeets.realname + "@" + UserDeets.hostname + "\r\n"
+                    select_key.data.write_buffer = select_key.data.write_buffer + msg
+
+                    #broadcast user to adjacent servers (broadcast_message)
+                    msg = ":" + self.servername + " USER " + UserDeets.nick + " " + UserDeets.hostname + " " + UserDeets.servername + " :" + UserDeets.realname + "\r\n"
+                    self.broadcast_message_to_servers(msg)
+
+        ######################################################################
+        # Server message
+        # Command: SERVER
+        # Parameters: 
+        #   <servername>: the name of the new server
+        #   <hopcount>: the number of hops required to reach this server
+        #   [<info>]: human-readable name for the server
+        # Examples: 
+        #   SERVER rivendale.irc.edu 1 :The House of Elrond                     # This is an initial registration command coming from a new server
     #                                                                       # that should be connected to this server in the spanning tree
     #   :gondolin.irc.com SERVER rivendale.irc.edu 4 :The House of Elrond   # This is a notification from a known server about a new server
     #                                                                       # that has connected elsewhere into the spanning tree
@@ -500,7 +506,7 @@ class IRCServer(object):
     # messages received from that socket
     def handle_server_message(self, select_key, prefix, command, params):
         if (len(params) < 3):
-            msg = ":" + str(self.servername) + " " + self.reply_codes["ERR_NEEDMOREPARAMS"] + " SERVER :Not enough parameters"
+            msg = ":" + str(self.servername) + " " + str(self.reply_codes["ERR_NEEDMOREPARAMS"]) + " SERVER :Not enough parameters"
             self.send_message_to_select_key(select_key, msg)
 
         else:
@@ -568,9 +574,41 @@ class IRCServer(object):
     # to all servers. If the user appended an optional Goodbye message then it should be sent to all users in the channels
     # the user had joined.
     def handle_quit_message(self, select_key, prefix, command, params):
-        pass
+        #A message from a user who is quitting the server
+        if prefix == None:
+            #remove from users_lookuptable
+            self.users_lookuptable.pop(select_key.data.nick)
+            test = select_key
 
+            #remove from adjacent_users 
+            self.adjacent_users.remove(select_key.data.nick)
 
+            #broadcast Quit message to all servers
+            if len(params) == 0:
+                msg = ":" + select_key.data.nick + " QUIT\r\n"
+            else:
+                msg = ":" + select_key.data.nick + " QUIT :" + params[0] + "\r\n"
+            self.broadcast_message_to_servers(msg)
+
+        else:
+            there = False
+            for users in self.users_lookuptable:
+                if prefix == users:
+                    there = True
+
+            if there == True:
+                self.users_lookuptable.pop(prefix)
+
+                for user in self.adjacent_users:
+                    if prefix == user:
+                        self.adjacent_users.remove(prefix)
+
+                if len(params) == 0:
+                    msg = ":" + prefix + " QUIT\r\n"
+                else:
+                    msg = ":" + prefix + " QUIT :" + params[0] + "\r\n"
+                
+                self.broadcast_message_to_servers(msg)
 
     
     ######################################################################
