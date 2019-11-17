@@ -1,6 +1,7 @@
 from Simulator import Simulator, Packet, EventEntity
 from enum import Enum
 from struct import pack, unpack
+import sys
 
 
 # In this class you will implement a full-duplex Go-Back-N client. Full-duplex means that this client can 
@@ -102,7 +103,49 @@ class GBNHost():
     #       when slots open up in the sending window.
     # TODO: Implement this method
     def receive_from_application_layer(self, payload):
-        pass
+        # rdt_send(data)
+        # if (nextseqnum < Base + N)
+        if (self.current_seq_number < (self.last_ACKed + self.window_size)):
+
+            # packet header
+            # pack packet into byte array for checksum computation
+            pkt = pack('!ii?is', self.current_seq_number, 0, False, len(payload), payload.encode())
+
+            # checksum computation
+            wordList  = []
+
+            # pad with 0x0000 if odd number of bytes and compute checksum
+            if (len(pkt) % 2 == 1):
+                wordList.append(0x0000)
+
+            #divide into 16 bit words and add to a wordList
+            for i in range(0, len(pkt), 2):
+                word = pkt[i] << 8 | pkt[i+1]
+                wordList.append(word)
+
+            # add words to sum
+            sum = 0
+            for i in range(0, len(wordList), 1):
+                c = sum + wordList[i]
+                sum += ((c & 0xffff) + (c >> 16))
+                # take one's complement of sum for checksum
+            checksum = (~sum)
+            if checksum < 0:
+                checksum *= -1
+            test = checksum
+
+            # sndpkt[nextseqnum] = make_pkt(nextseqnum, data, checksum)
+#            self.unACKed_buffer[self.current_seq_number] = pack(self.current_seq_number, 0, FIXME, False, )
+
+            # udt_send(sndpkt[nextseqnum])
+            self.simulator.to_layer3(self.entity, self.unACKed_buffer[self.current_seq_number], False)
+
+            # if base == nextseqnum
+            if (self.last_ACKed == self.current_seq_number):
+                self.simulator.start_timer(self.entity, self.timer_interval)
+
+            # nextseqnum ++
+            self.current_seq_number += 1
 
 
     # This function implements the RECEIVING functionality. This function will be more complex that
@@ -119,11 +162,11 @@ class GBNHost():
     #       not send an ACK when we should have
     # TODO: Implement this method
     def receive_from_network_layer(self, byte_data):
-        pass
+        test = byte_data
 
 
     # This function is called by the simulator when a timer interrupt is triggered due to an ACK not being 
     # received in the expected time frame. All unACKed data should be resent, and the timer restarted
     # TODO: Implement this method
     def timer_interrupt(self):
-        pass
+        test = self

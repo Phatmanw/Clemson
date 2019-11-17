@@ -1,0 +1,14 @@
+-----  Sliding Window Network Simulator Version -------- 
+
+EventEntity.B: Received from Layer 5: aaaaaaaaaa
+EventEntity.B: Received from Layer 5: bbbbbbbbbb
+EventEntity.B: Received from Layer 5: cccccccccc
+EventEntity.B: Received from Layer 5: dddddddddd
+EventEntity.A: Received from Layer 5: eeeeeeeeee
+EventEntity.A: Received from Layer 5: ffffffffff
+EventEntity.B: Received from Layer 5: gggggggggg
+EventEntity.A: Received from Layer 5: hhhhhhhhhh
+EventEntity.B: Received from Layer 5: iiiiiiiiii
+EventEntity.A: Received from Layer 5: jjjjjjjjjj
+Simulator terminated at time 170.14473218736913 after sending 10 msgs from layer5
+
