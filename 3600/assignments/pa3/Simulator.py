@@ -211,6 +211,7 @@ class Simulator():
     
 
     def stop_timer(self, entity):
+        print("STOP TIMER")
         for idx, e in enumerate(self.event_list):
             if e.evtype == EventType.TIMER_INTERRUPT and e.eventity == entity:
                 self.event_list.pop(idx)    # Remove the first timer event associated with this entity

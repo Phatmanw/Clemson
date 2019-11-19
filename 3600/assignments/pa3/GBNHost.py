@@ -107,18 +107,17 @@ class GBNHost():
         # if (nextseqnum < Base + N)
         if (self.current_seq_number < (self.last_ACKed + self.window_size)):
 
-            # packet header
+            # checksum computation
             # pack packet into byte array for checksum computation
             pkt = pack('!ii?is', self.current_seq_number, 0, False, len(payload), payload.encode())
 
-            # checksum computation
             wordList  = []
 
             # pad with 0x0000 if odd number of bytes and compute checksum
             if (len(pkt) % 2 == 1):
                 wordList.append(0x0000)
 
-            #divide into 16 bit words and add to a wordList
+            # divide into 16 bit words and add to a wordList
             for i in range(0, len(pkt), 2):
                 word = pkt[i] << 8 | pkt[i+1]
                 wordList.append(word)
@@ -128,14 +127,16 @@ class GBNHost():
             for i in range(0, len(wordList), 1):
                 c = sum + wordList[i]
                 sum += ((c & 0xffff) + (c >> 16))
-                # take one's complement of sum for checksum
+
+            # take one's complement of sum for checksum
             checksum = (~sum)
+
+            # convert to signed int for packing
             if checksum < 0:
                 checksum *= -1
-            test = checksum
 
             # sndpkt[nextseqnum] = make_pkt(nextseqnum, data, checksum)
-#            self.unACKed_buffer[self.current_seq_number] = pack(self.current_seq_number, 0, FIXME, False, )
+            self.unACKed_buffer[self.current_seq_number] = pack('!iiH?i10s', self.current_seq_number, 0, checksum, False, len(payload), payload.encode())
 
             # udt_send(sndpkt[nextseqnum])
             self.simulator.to_layer3(self.entity, self.unACKed_buffer[self.current_seq_number], False)
@@ -162,11 +163,76 @@ class GBNHost():
     #       not send an ACK when we should have
     # TODO: Implement this method
     def receive_from_network_layer(self, byte_data):
-        test = byte_data
+
+        #unpack byte_data
+        unpacked_data = unpack('!iiH?i10s', byte_data)
+
+        # check for corruption
+        # FIXME
+
+        # rdt_rcv(rcvpkt) && notcorrupt(rcvpkt)
+        # base = getacknum(rcvpkt)+1
+        if (unpacked_data[3] == True):
+            self.last_ACKed = self.last_ACKed + 1
+        # if (base == nextseqnum)
+        if self.last_ACKed == self.current_seq_number:
+            #stop_timer
+            self.simulator.stop_timer(self.entity)
+        else:
+            #start_timer
+            self.simulator.start_timer(self.entity, self.timer_interval)
+
+        # rdt_rcv(rcvpkt) && notcurrupt(rcvpkt) && hasseqnum(rcvpkt, expectedseqnum)
+        # if packet contains data
+        if ((unpacked_data[3] == False) and (unpacked_data[1] == 0)):
+            # deliver_data(data)
+            self.simulator.to_layer5(self.entity, unpacked_data[5].decode())
+            #sndpkt = make_pkt(expectedseqnum,ACK, chksum)
+            test = ""
+            pkt = pack('!iiH?i10s', 0, self.expected_seq_number, 0, True, 0, test.encode())
+            #udt_send(sndpkt)
+            self.simulator.to_layer3(self.entity, pkt, True)
+            #expectedseqnum++
+            self.expected_seq_number += 1
+
+
+
+
+        """
+        # pad with 0x0000 if odd number of bytes and compute checksum
+        wordList = []
+        if (len(byte_data) % 2 == 1):
+            wordList.append(0x0000)
+
+        # divide into 16 bit words and add to a wordList
+        for i in range(0, (len(byte_data)-1), 2):
+            word = byte_data[i] << 8 | byte_data[i+1]
+            wordList.append(word)
+
+        # add words to sum
+        sum = 0
+        for i in range(0, len(wordList), 1):
+            c = sum + wordList[i]
+            sum += ((c & 0xffff) + (c >> 16))
+
+        print(sum)
+
+
+        msg = unpacked_data[5].decode()
+        print("payload == " + msg)
+        test = unpacked_data
+        """
 
 
     # This function is called by the simulator when a timer interrupt is triggered due to an ACK not being 
     # received in the expected time frame. All unACKed data should be resent, and the timer restarted
     # TODO: Implement this method
     def timer_interrupt(self):
-        test = self
+        """
+        max = self.current_seq_number - 1
+        base = self.last_ACKed
+        self.simulator.start_timer(self.entity, self.timer_interval)
+        for i in range(base, max, 1):
+            self.simulator.to_layer3(self.entity, self.unACKed_buffer[i], False)
+        """
+        pass
