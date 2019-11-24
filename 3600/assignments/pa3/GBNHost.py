@@ -80,12 +80,14 @@ class GBNHost():
                                                     # have been ACKed
         self.current_seq_number = 1                 # The SEQ number that will be used next
         self.app_layer_buffer = []                  # A buffer that stores all data received from the application 
-                                                    #layer that hasn't yet been sent
+                                                    # layer that hasn't yet been sent
         self.unACKed_buffer = {}                    # A buffer that stores all sent but unACKed packets
 
         # Receiver properties
         self.expected_seq_number = 1                # The next SEQ number expected
-        self.last_ACK_pkt = None                    # The last ACK pkt sent. 
+        self.last_ACK_pkt = self.make_pkt(False)
+
+                                                    # The last ACK pkt sent. 
                                                     # TODO: This should be initialized to an ACK response with an
                                                     #       ACK number of 0. If a problem occurs with the first
                                                     #       packet that is received, then this default ACK should 
@@ -103,51 +105,28 @@ class GBNHost():
     #       when slots open up in the sending window.
     # TODO: Implement this method
     def receive_from_application_layer(self, payload):
+
+
+        base = self.last_ACKed + 1
+
         # rdt_send(data)
         # if (nextseqnum < Base + N)
-        if (self.current_seq_number < (self.last_ACKed + self.window_size)):
+        if (self.current_seq_number < (base + self.window_size)):
 
-            # checksum computation
-            # pack packet into byte array for checksum computation
-            pkt = pack('!ii?is', self.current_seq_number, 0, False, len(payload), payload.encode())
-
-            wordList  = []
-
-            # pad with 0x0000 if odd number of bytes and compute checksum
-            if (len(pkt) % 2 == 1):
-                wordList.append(0x0000)
-
-            # divide into 16 bit words and add to a wordList
-            for i in range(0, len(pkt), 2):
-                word = pkt[i] << 8 | pkt[i+1]
-                wordList.append(word)
-
-            # add words to sum
-            sum = 0
-            for i in range(0, len(wordList), 1):
-                c = sum + wordList[i]
-                sum += ((c & 0xffff) + (c >> 16))
-
-            # take one's complement of sum for checksum
-            checksum = (~sum)
-
-            # convert to signed int for packing
-            if checksum < 0:
-                checksum *= -1
+            pkt = self.make_pkt(payload)
 
             # sndpkt[nextseqnum] = make_pkt(nextseqnum, data, checksum)
-            self.unACKed_buffer[self.current_seq_number] = pack('!iiH?i10s', self.current_seq_number, 0, checksum, False, len(payload), payload.encode())
+            self.unACKed_buffer[self.current_seq_number] = pkt
 
             # udt_send(sndpkt[nextseqnum])
             self.simulator.to_layer3(self.entity, self.unACKed_buffer[self.current_seq_number], False)
 
             # if base == nextseqnum
-            if (self.last_ACKed == self.current_seq_number):
+            if (base == self.current_seq_number):
                 self.simulator.start_timer(self.entity, self.timer_interval)
 
             # nextseqnum ++
             self.current_seq_number += 1
-
 
     # This function implements the RECEIVING functionality. This function will be more complex that
     # receive_from_application_layer(), as it must process both packets containing new data, and packets
@@ -163,76 +142,135 @@ class GBNHost():
     #       not send an ACK when we should have
     # TODO: Implement this method
     def receive_from_network_layer(self, byte_data):
-
-        #unpack byte_data
-        unpacked_data = unpack('!iiH?i10s', byte_data)
-
         # check for corruption
-        # FIXME
+        corrupt = self.checkCorruption(byte_data)
 
+
+        #unpack fixed length header
+        header = unpack("!iiH?i", byte_data[:15])
+            
+        # Check to see if the length of the packet is greater
+        # than zero. If so, unpack the payload
+        try:
+            if header[4] > 0:
+                payload = unpack("!%is"%header[4], byte_data[15:])[0].decode()
+            else:
+                payload = None
+
+            pkt = Packet(header, payload, byte_data)
+        except Exception as e:
+            pkt = Packet(header, None, byte_data)
+            corrupt = True
+
+        # ACK MESSAGE
         # rdt_rcv(rcvpkt) && notcorrupt(rcvpkt)
-        # base = getacknum(rcvpkt)+1
-        if (unpacked_data[3] == True):
-            self.last_ACKed = self.last_ACKed + 1
-        # if (base == nextseqnum)
-        if self.last_ACKed == self.current_seq_number:
-            #stop_timer
-            self.simulator.stop_timer(self.entity)
-        else:
-            #start_timer
-            self.simulator.start_timer(self.entity, self.timer_interval)
+        if (pkt.ackflag == True and corrupt == False):
+            # base = getacknum(rcvpkt)+1
+            self.last_ACKed = pkt.acknum
+            # if (base == nextseqnum)
+            if self.last_ACKed + 1 == self.current_seq_number:
+                #stop_timer
+                self.simulator.stop_timer(self.entity)
+            else:
+                #start_timer
+                self.simulator.start_timer(self.entity, self.timer_interval)
 
+
+        # PAYLOAD MESSAGE
         # rdt_rcv(rcvpkt) && notcurrupt(rcvpkt) && hasseqnum(rcvpkt, expectedseqnum)
         # if packet contains data
-        if ((unpacked_data[3] == False) and (unpacked_data[1] == 0)):
+        if (pkt.ackflag == False and corrupt == False and pkt.seqnum == self.expected_seq_number):
             # deliver_data(data)
-            self.simulator.to_layer5(self.entity, unpacked_data[5].decode())
+            self.simulator.to_layer5(self.entity, pkt.payload)
             #sndpkt = make_pkt(expectedseqnum,ACK, chksum)
-            test = ""
-            pkt = pack('!iiH?i10s', 0, self.expected_seq_number, 0, True, 0, test.encode())
+            pkt = self.make_pkt(False)
+
+            # new Last_ACK_pkt
+            self.last_ACK_pkt = pkt
+
             #udt_send(sndpkt)
             self.simulator.to_layer3(self.entity, pkt, True)
+
             #expectedseqnum++
             self.expected_seq_number += 1
-
-
-
-
-        """
-        # pad with 0x0000 if odd number of bytes and compute checksum
-        wordList = []
-        if (len(byte_data) % 2 == 1):
-            wordList.append(0x0000)
-
-        # divide into 16 bit words and add to a wordList
-        for i in range(0, (len(byte_data)-1), 2):
-            word = byte_data[i] << 8 | byte_data[i+1]
-            wordList.append(word)
-
-        # add words to sum
-        sum = 0
-        for i in range(0, len(wordList), 1):
-            c = sum + wordList[i]
-            sum += ((c & 0xffff) + (c >> 16))
-
-        print(sum)
-
-
-        msg = unpacked_data[5].decode()
-        print("payload == " + msg)
-        test = unpacked_data
-        """
+        elif (pkt.ackflag == False and corrupt == False and pkt.seqnum != self.expected_seq_number):
+            print("Packet out of order, sending las_ACKed message")
+            self.simulator.to_layer3(self.entity, self.last_ACK_pkt, True)
 
 
     # This function is called by the simulator when a timer interrupt is triggered due to an ACK not being 
     # received in the expected time frame. All unACKed data should be resent, and the timer restarted
     # TODO: Implement this method
     def timer_interrupt(self):
-        """
-        max = self.current_seq_number - 1
-        base = self.last_ACKed
+        max = self.current_seq_number
+        base = self.last_ACKed+1
+
         self.simulator.start_timer(self.entity, self.timer_interval)
+
         for i in range(base, max, 1):
+            print("RESENDING PACKET")
             self.simulator.to_layer3(self.entity, self.unACKed_buffer[i], False)
-        """
-        pass
+
+    
+    # this function makes a packet with or without a payload
+    def make_pkt(self, data = False):
+        # if there is NOT a payload
+        # ACK pkt
+        if (data == False):
+            pkt = pack('!ii?i', 0, self.expected_seq_number, True, 0)
+            checksum = self.getChecksum(pkt)
+            pkt = pack('!iiH?i', 0, self.expected_seq_number, checksum, True, 0)
+            return pkt
+        # if there IS a payload
+        # data pkt
+        else:
+            size = len(data)
+            pkt = pack('!ii?i' + str(size) + 's', self.current_seq_number, 0, False, size, data.encode())
+            checksum = self.getChecksum(pkt)
+            pkt = pack('!iiH?i' + str(size) + 's', self.current_seq_number, 0, checksum, False, size, data.encode())
+            return pkt
+    
+    def getChecksum(self, packet):
+        
+        padded_pkt = None
+        # if byte array is odd, pad it to make it even
+        if len(packet) % 2 == 1:
+            padded_pkt = packet + bytes(1)
+        # otherwise do nothing
+        else:
+            padded_pkt = packet
+
+        s = 0x0000
+        # split into 16 bit words
+        for i in range(0, len(padded_pkt), 2):
+            w = padded_pkt[i] << 8 | padded_pkt[i+1]
+            s = self.carry(s, w)
+
+        return ~s & 0xffff
+
+    # splits byte array up into 16 bit words, adds them, and checks if sum is all 1's
+    # returns False if all 1's (no corruption), and True otherwise
+    def checkCorruption(self, packet):
+        padded_pkt = None
+
+        if len(packet) % 2 == 1:
+            padded_pkt = packet + bytes(1)
+        else:
+            padded_pkt = packet
+        
+        s = 0x0000
+        for i in range(0, len(padded_pkt), 2):
+            w = padded_pkt[i] << 8 | padded_pkt[i+1]
+            s = self.carry(s, w)
+        
+        if s == 65535:
+            return False
+        else:
+            print ("OHH NOO, CORRUPTION!!!")
+            return True
+
+    # carries binary addition overflow
+    def carry(self, a, b):
+        c = a + b
+        return (c & 0xffff) + (c >> 16)
+
