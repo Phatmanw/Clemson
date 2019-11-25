@@ -85,7 +85,6 @@ class GBNHost():
 
         # Receiver properties
         self.expected_seq_number = 1                # The next SEQ number expected
-        #self.last_ACK_pkt = self.make_pkt(False)
         self.last_ACK_pkt = pack('!iiH?i', 0, 0, 65279, True, 0)
 
                                                     # The last ACK pkt sent. 
@@ -173,8 +172,8 @@ class GBNHost():
                 self.simulator.stop_timer(self.entity)
             else:
                 #start_timer
-                self.simulator.stop_timer(self.entity)
-                self.simulator.start_timer(self.entity, self.timer_interval)
+                #self.simulator.start_timer(self.entity, self.timer_interval)
+                pass
 
 
         # PAYLOAD MESSAGE
