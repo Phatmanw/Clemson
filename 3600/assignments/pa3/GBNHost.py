@@ -85,7 +85,8 @@ class GBNHost():
 
         # Receiver properties
         self.expected_seq_number = 1                # The next SEQ number expected
-        self.last_ACK_pkt = self.make_pkt(False)
+        #self.last_ACK_pkt = self.make_pkt(False)
+        self.last_ACK_pkt = pack('!iiH?i', 0, 0, 65279, True, 0)
 
                                                     # The last ACK pkt sent. 
                                                     # TODO: This should be initialized to an ACK response with an
@@ -145,7 +146,6 @@ class GBNHost():
         # check for corruption
         corrupt = self.checkCorruption(byte_data)
 
-
         #unpack fixed length header
         header = unpack("!iiH?i", byte_data[:15])
             
@@ -153,7 +153,7 @@ class GBNHost():
         # than zero. If so, unpack the payload
         try:
             if header[4] > 0:
-                payload = unpack("!%is"%header[4], byte_data[15:])[0].decode()
+                payload = unpack('!%is'%header[4], byte_data[15:])[0].decode()
             else:
                 payload = None
 
@@ -173,6 +173,7 @@ class GBNHost():
                 self.simulator.stop_timer(self.entity)
             else:
                 #start_timer
+                self.simulator.stop_timer(self.entity)
                 self.simulator.start_timer(self.entity, self.timer_interval)
 
 
@@ -195,6 +196,9 @@ class GBNHost():
             self.expected_seq_number += 1
         elif (pkt.ackflag == False and corrupt == False and pkt.seqnum != self.expected_seq_number):
             print("Packet out of order, sending las_ACKed message")
+            self.simulator.to_layer3(self.entity, self.last_ACK_pkt, True)
+        elif corrupt == True:
+            print("Packet corrupt, sending las_ACKed message")
             self.simulator.to_layer3(self.entity, self.last_ACK_pkt, True)
 
 
