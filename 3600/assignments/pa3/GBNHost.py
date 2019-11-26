@@ -85,6 +85,7 @@ class GBNHost():
 
         # Receiver properties
         self.expected_seq_number = 1                # The next SEQ number expected
+        # ACK response with an ACK # of 0
         self.last_ACK_pkt = pack('!iiH?i', 0, 0, 65279, True, 0)
 
                                                     # The last ACK pkt sent. 
@@ -106,13 +107,13 @@ class GBNHost():
     # TODO: Implement this method
     def receive_from_application_layer(self, payload):
 
-
         base = self.last_ACKed + 1
 
         # rdt_send(data)
         # if (nextseqnum < Base + N)
         if (self.current_seq_number < (base + self.window_size)):
 
+            # make a packet with payload
             pkt = self.make_pkt(payload)
 
             # sndpkt[nextseqnum] = make_pkt(nextseqnum, data, checksum)
@@ -127,6 +128,11 @@ class GBNHost():
 
             # nextseqnum ++
             self.current_seq_number += 1
+
+        # sending window closed, add to buffer
+        else:
+            self.app_layer_buffer.append(payload)
+        
 
     # This function implements the RECEIVING functionality. This function will be more complex that
     # receive_from_application_layer(), as it must process both packets containing new data, and packets
@@ -157,6 +163,7 @@ class GBNHost():
                 payload = None
 
             pkt = Packet(header, payload, byte_data)
+        # if header length is corrupt, make an empty packet and set corrupt to True
         except Exception as e:
             pkt = Packet(header, None, byte_data)
             corrupt = True
@@ -166,20 +173,17 @@ class GBNHost():
         if (pkt.ackflag == True and corrupt == False):
             # base = getacknum(rcvpkt)+1
             self.last_ACKed = pkt.acknum
+
             # if (base == nextseqnum)
             if self.last_ACKed + 1 == self.current_seq_number:
                 #stop_timer
                 self.simulator.stop_timer(self.entity)
-            else:
-                #start_timer
-                #self.simulator.start_timer(self.entity, self.timer_interval)
-                pass
 
 
         # PAYLOAD MESSAGE
         # rdt_rcv(rcvpkt) && notcurrupt(rcvpkt) && hasseqnum(rcvpkt, expectedseqnum)
         # if packet contains data
-        if (pkt.ackflag == False and corrupt == False and pkt.seqnum == self.expected_seq_number):
+        elif (pkt.ackflag == False and corrupt == False and pkt.seqnum == self.expected_seq_number):
             # deliver_data(data)
             self.simulator.to_layer5(self.entity, pkt.payload)
             #sndpkt = make_pkt(expectedseqnum,ACK, chksum)
@@ -193,11 +197,11 @@ class GBNHost():
 
             #expectedseqnum++
             self.expected_seq_number += 1
+        # if expected seq number is out of order
         elif (pkt.ackflag == False and corrupt == False and pkt.seqnum != self.expected_seq_number):
-            print("Packet out of order, sending las_ACKed message")
             self.simulator.to_layer3(self.entity, self.last_ACK_pkt, True)
+        # if data is corrupt
         elif corrupt == True:
-            print("Packet corrupt, sending las_ACKed message")
             self.simulator.to_layer3(self.entity, self.last_ACK_pkt, True)
 
 
@@ -208,10 +212,11 @@ class GBNHost():
         max = self.current_seq_number
         base = self.last_ACKed+1
 
+        # start timer
         self.simulator.start_timer(self.entity, self.timer_interval)
 
+        # resend unACKed messages
         for i in range(base, max, 1):
-            print("RESENDING PACKET")
             self.simulator.to_layer3(self.entity, self.unACKed_buffer[i], False)
 
     
@@ -233,6 +238,7 @@ class GBNHost():
             pkt = pack('!iiH?i' + str(size) + 's', self.current_seq_number, 0, checksum, False, size, data.encode())
             return pkt
     
+    # calculates checksum for a packet being sent
     def getChecksum(self, packet):
         
         padded_pkt = None
@@ -269,11 +275,9 @@ class GBNHost():
         if s == 65535:
             return False
         else:
-            print ("OHH NOO, CORRUPTION!!!")
             return True
 
     # carries binary addition overflow
     def carry(self, a, b):
         c = a + b
         return (c & 0xffff) + (c >> 16)
-
